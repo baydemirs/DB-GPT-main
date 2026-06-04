@@ -1,0 +1,40 @@
+# =============================================================
+# DB-GPT DEMO - PostgreSQL demo veritabani
+# =============================================================
+# Bu compose SADECE demo veri kaynagini (demo_ai_database)
+# ayaga kaldirir. DB-GPT web sunucusunu ayrica calistiracaksin
+# (uv run ... veya kendi yontemin). Boylece demo sirasinda
+# DB-GPT'ye "PostgreSQL data source" olarak baglanir.
+#
+# Calistirma:
+#   docker compose -f docker-compose.demo.yml up -d
+# Durdurma:
+#   docker compose -f docker-compose.demo.yml down
+# Verileri de silerek sifirlamak:
+#   docker compose -f docker-compose.demo.yml down -v
+#
+# Ilk acilista demo/postgres/*.sql dosyalari otomatik calisir
+# (alfabetik sira: once 01_schema.sql, sonra 02_seed_data.sql).
+# =============================================================
+services:
+  demo-postgres:
+    image: postgres:16
+    container_name: dbgpt-demo-postgres
+    environment:
+      POSTGRES_DB: demo_ai_database
+      POSTGRES_USER: demo_user
+      POSTGRES_PASSWORD: demo_pass_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbgpt-demo-pgdata:/var/lib/postgresql/data
+      - ./demo/postgres:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo_user -d demo_ai_database"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dbgpt-demo-pgdata:
