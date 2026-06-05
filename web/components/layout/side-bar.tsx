@@ -21,6 +21,7 @@ import Icon, {
 import { Popover, Skeleton, Tooltip, message } from 'antd';
 import cls from 'classnames';
 import moment from 'moment';
+import 'moment/locale/tr';
 import 'moment/locale/zh-cn';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -130,10 +131,9 @@ function SideBar() {
   }, [mode, setMode]);
 
   const handleChangeLang = useCallback(() => {
-    const language = i18n.language === 'en' ? 'zh' : 'en';
+    const language = i18n.language === 'en' ? 'tr' : 'en';
     i18n.changeLanguage(language);
-    if (language === 'zh') moment.locale('zh-cn');
-    if (language === 'en') moment.locale('en');
+    moment.locale(language === 'tr' ? 'tr' : 'en');
     localStorage.setItem(STORAGE_LANG_KEY, language);
   }, [i18n]);
 
@@ -273,8 +273,8 @@ function SideBar() {
 
   useEffect(() => {
     const language = i18n.language;
-    if (language === 'zh') moment.locale('zh-cn');
-    if (language === 'en') moment.locale('en');
+    if (language === 'tr') moment.locale('tr');
+    else moment.locale('en');
   }, [i18n.language]);
 
   useEffect(() => {

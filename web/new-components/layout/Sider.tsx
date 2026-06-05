@@ -30,16 +30,11 @@ const Sider: React.FC = () => {
     localStorage.setItem(STORAGE_THEME_KEY, theme);
   }, [mode, setMode]);
 
-  // 切换语言
+  // Toggle UI language between English and Turkish
   const handleChangeLang = useCallback(() => {
-    const language = i18n.language === 'en' ? 'zh' : 'en';
+    const language = i18n.language === 'en' ? 'tr' : 'en';
     i18n.changeLanguage(language);
-    if (language === 'zh') {
-      moment.locale('zh-cn');
-    }
-    if (language === 'en') {
-      moment.locale('en');
-    }
+    moment.locale(language === 'tr' ? 'tr' : 'en');
     localStorage.setItem(STORAGE_LANG_KEY, language);
   }, [i18n]);
 

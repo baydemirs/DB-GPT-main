@@ -41,7 +41,7 @@ function CssWrapper({ children }: { children: React.ReactElement }) {
   }, [mode]);
 
   useEffect(() => {
-    i18n.changeLanguage?.(window.localStorage.getItem(STORAGE_LANG_KEY) || 'zh');
+    i18n.changeLanguage?.(window.localStorage.getItem(STORAGE_LANG_KEY) || 'en');
   }, [i18n]);
 
   return (

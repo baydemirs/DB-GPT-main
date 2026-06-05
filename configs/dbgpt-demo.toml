@@ -66,20 +66,35 @@ memory = {type = "token", max_token_limit = 20000}
 # =============================================================
 [models]
 
-# ---- OpenAI (VARSAYILAN) ----
+# ---- Google Gemini (VARSAYILAN - OpenAI uyumlu endpoint uzerinden) ----
+# Tek GEMINI_API_KEY ile hem LLM hem embedding calisir.
+# Ucretsiz anahtar: https://aistudio.google.com/apikey
 [[models.llms]]
-name = "${env:LLM_MODEL_NAME:-gpt-4o}"
-provider = "${env:LLM_MODEL_PROVIDER:-proxy/openai}"
-api_base = "${env:OPENAI_API_BASE:-https://api.openai.com/v1}"
-api_key = "${env:OPENAI_API_KEY}"
+name = "${env:LLM_MODEL_NAME:-gemini-2.5-flash}"
+provider = "proxy/openai"
+api_base = "${env:GEMINI_API_BASE:-https://generativelanguage.googleapis.com/v1beta/openai/}"
+api_key = "${env:GEMINI_API_KEY}"
 
 [[models.embeddings]]
-name = "${env:EMBEDDING_MODEL_NAME:-text-embedding-3-small}"
-provider = "${env:EMBEDDING_MODEL_PROVIDER:-proxy/openai}"
-api_url = "${env:EMBEDDING_MODEL_API_URL:-https://api.openai.com/v1/embeddings}"
-api_key = "${env:OPENAI_API_KEY}"
+name = "${env:EMBEDDING_MODEL_NAME:-gemini-embedding-001}"
+provider = "proxy/openai"
+api_url = "${env:GEMINI_EMBEDDING_API_URL:-https://generativelanguage.googleapis.com/v1beta/openai/embeddings}"
+api_key = "${env:GEMINI_API_KEY}"
 
-# ---- SiliconFlow (alternatif - acmak icin yorumu kaldir, OpenAI blogunu kapat) ----
+# ---- OpenAI (alternatif) ----
+# [[models.llms]]
+# name = "gpt-4o"
+# provider = "proxy/openai"
+# api_base = "https://api.openai.com/v1"
+# api_key = "${env:OPENAI_API_KEY}"
+#
+# [[models.embeddings]]
+# name = "text-embedding-3-small"
+# provider = "proxy/openai"
+# api_url = "https://api.openai.com/v1/embeddings"
+# api_key = "${env:OPENAI_API_KEY}"
+
+# ---- SiliconFlow (alternatif - acmak icin yorumu kaldir, Gemini blogunu kapat) ----
 # [[models.llms]]
 # name = "Qwen/Qwen2.5-Coder-32B-Instruct"
 # provider = "proxy/siliconflow"
