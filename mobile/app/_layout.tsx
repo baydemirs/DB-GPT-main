@@ -12,6 +12,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Onboarding from '../src/screens/Onboarding';
 import { ChatProvider } from '../src/store/ChatContext';
 import { ThemeProvider, useApp } from '../src/theme/ThemeContext';
 
@@ -28,7 +29,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <ChatProvider>
-            <ThemedNavigator fontsLoaded={fontsLoaded} />
+            <Root fontsLoaded={fontsLoaded} />
           </ChatProvider>
         </ThemeProvider>
       </SafeAreaProvider>
@@ -36,8 +37,8 @@ export default function RootLayout() {
   );
 }
 
-function ThemedNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
-  const { theme, ready } = useApp();
+function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
+  const { theme, ready, settings } = useApp();
 
   if (!fontsLoaded || !ready) {
     return (
@@ -47,19 +48,28 @@ function ThemedNavigator({ fontsLoaded }: { fontsLoaded: boolean }) {
     );
   }
 
+  const barStyle = theme.scheme === 'dark' ? 'light' : 'dark';
+
+  if (!settings.onboarded) {
+    return (
+      <>
+        <StatusBar style={barStyle} />
+        <Onboarding />
+      </>
+    );
+  }
+
   return (
     <>
-      <StatusBar style={theme.scheme === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={barStyle} />
       <Stack
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: theme.colors.bg },
-          animation: 'slide_from_right',
         }}
       >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="history" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
-        <Stack.Screen name="settings" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="chat" options={{ animation: 'slide_from_right' }} />
       </Stack>
     </>
   );

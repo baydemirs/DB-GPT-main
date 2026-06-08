@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { ChevronDown, MessageSquarePlus, PanelLeft, Settings2 } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ChevronDown, ChevronLeft, MessageSquarePlus } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -23,10 +23,20 @@ export default function ChatScreen() {
   const { colors, font, fontSize, spacing, radius } = theme;
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ prompt?: string }>();
   const { messages, streaming, send, stop, newChat, model, models, setModel } = useChat();
 
   const listRef = useRef<FlatList>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const sentPrompt = useRef(false);
+
+  // Ana sayfadan gelen hazır öneriyi bir kez otomatik gönder.
+  useEffect(() => {
+    if (params.prompt && !sentPrompt.current) {
+      sentPrompt.current = true;
+      send(String(params.prompt));
+    }
+  }, [params.prompt, send]);
 
   useEffect(() => {
     if (messages.length) {
@@ -37,36 +47,24 @@ export default function ChatScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: insets.top }]}>
-      {/* Başlık çubuğu */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <HeaderButton onPress={() => router.push('/history')}>
-          <PanelLeft size={22} color={colors.text} />
+        <HeaderButton onPress={() => router.back()}>
+          <ChevronLeft size={26} color={colors.text} />
         </HeaderButton>
 
         <Pressable
           onPress={() => setPickerOpen(true)}
-          style={({ pressed }) => [
-            styles.modelPill,
-            { backgroundColor: pressed ? colors.surfaceAlt : colors.surface, borderRadius: radius.full },
-          ]}
+          style={({ pressed }) => [styles.modelPill, { backgroundColor: pressed ? colors.surfaceAlt : colors.surface, borderColor: colors.border, borderRadius: radius.full }]}
         >
-          <Text
-            style={{ color: colors.text, fontFamily: font.semibold, fontSize: fontSize.sm, maxWidth: 150 }}
-            numberOfLines={1}
-          >
+          <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: fontSize.sm, maxWidth: 150 }} numberOfLines={1}>
             {model}
           </Text>
           <ChevronDown size={15} color={colors.textMuted} />
         </Pressable>
 
-        <View style={styles.headerRight}>
-          <HeaderButton onPress={newChat}>
-            <MessageSquarePlus size={22} color={colors.text} />
-          </HeaderButton>
-          <HeaderButton onPress={() => router.push('/settings')}>
-            <Settings2 size={21} color={colors.text} />
-          </HeaderButton>
-        </View>
+        <HeaderButton onPress={newChat}>
+          <MessageSquarePlus size={22} color={colors.text} />
+        </HeaderButton>
       </View>
 
       <KeyboardAvoidingView
@@ -95,24 +93,14 @@ export default function ChatScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      <ModelPickerSheet
-        visible={pickerOpen}
-        models={models}
-        selected={model}
-        onSelect={setModel}
-        onClose={() => setPickerOpen(false)}
-      />
+      <ModelPickerSheet visible={pickerOpen} models={models} selected={model} onSelect={setModel} onClose={() => setPickerOpen(false)} />
     </View>
   );
 }
 
 function HeaderButton({ children, onPress }: { children: React.ReactNode; onPress: () => void }) {
   return (
-    <Pressable
-      onPress={onPress}
-      hitSlop={8}
-      style={({ pressed }) => [styles.hBtn, { opacity: pressed ? 0.5 : 1 }]}
-    >
+    <Pressable onPress={onPress} hitSlop={8} style={({ pressed }) => [styles.hBtn, { opacity: pressed ? 0.5 : 1 }]}>
       {children}
     </Pressable>
   );
@@ -125,17 +113,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     height: 52,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  hBtn: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center' },
-  headerRight: { flexDirection: 'row', alignItems: 'center' },
-  modelPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
+  hBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  modelPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1 },
 });
