@@ -13,8 +13,9 @@ export const DEFAULT_CONFIG = {
   apiBaseUrl: 'http://10.69.31.91:5670',
   // Web'deki sahte (mock) kullanıcı ile aynı — backend bunu `user-id` header'ı olarak bekliyor:
   userId: '001',
-  // Demo'da aktif model (configs/dbgpt-demo.toml):
-  model: 'gemini-2.5-flash',
+  // Demo'da aktif model (configs/dbgpt-demo.toml). 2.5-flash kotası dolarsa
+  // 2.5-flash-lite ayrı kotaya sahip — varsayılan onu kullanıyoruz:
+  model: 'gemini-2.5-flash-lite',
   // DB/app gerektirmeyen en basit sohbet modu:
   chatMode: 'chat_normal',
   temperature: 0.5,

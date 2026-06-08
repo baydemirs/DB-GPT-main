@@ -3,7 +3,7 @@ import { Sparkles } from 'lucide-react-native';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
-import MarkdownMessage from './MarkdownMessage';
+import AssistantMessage from './AssistantMessage';
 import TypingDots from './TypingDots';
 
 export type BubbleMessage = {
@@ -62,7 +62,7 @@ export default function ChatBubble({ message }: { message: BubbleMessage }) {
             <TypingDots />
           </View>
         ) : (
-          <MarkdownMessage content={message.content} />
+          <AssistantMessage content={message.content} />
         )}
       </View>
     </Animated.View>

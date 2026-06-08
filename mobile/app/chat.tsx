@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronDown, ChevronLeft, MessageSquarePlus } from 'lucide-react-native';
+import { ChevronDown, ChevronLeft, Database, MessageSquarePlus } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -18,19 +18,21 @@ import ModelPickerSheet from '../src/components/ModelPickerSheet';
 import { useChat } from '../src/store/ChatContext';
 import { useTheme } from '../src/theme/ThemeContext';
 
+const DB_SUGGESTIONS = ['Kaç satır veri var?', 'İlk 5 kaydı göster', 'Sütunları listele'];
+
 export default function ChatScreen() {
   const theme = useTheme();
   const { colors, font, fontSize, spacing, radius } = theme;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ prompt?: string }>();
-  const { messages, streaming, send, stop, newChat, model, models, setModel } = useChat();
+  const { messages, streaming, send, stop, newChat, model, models, setModel, selectParam } = useChat();
 
   const listRef = useRef<FlatList>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const sentPrompt = useRef(false);
+  const isDb = !!selectParam;
 
-  // Ana sayfadan gelen hazır öneriyi bir kez otomatik gönder.
   useEffect(() => {
     if (params.prompt && !sentPrompt.current) {
       sentPrompt.current = true;
@@ -62,10 +64,23 @@ export default function ChatScreen() {
           <ChevronDown size={15} color={colors.textMuted} />
         </Pressable>
 
-        <HeaderButton onPress={newChat}>
+        <HeaderButton onPress={() => newChat()}>
           <MessageSquarePlus size={22} color={colors.text} />
         </HeaderButton>
       </View>
+
+      {/* Veritabanı bağlam çubuğu */}
+      {isDb && (
+        <View style={[styles.ctxBar, { backgroundColor: colors.primarySoft, borderBottomColor: colors.border }]}>
+          <Database size={14} color={colors.primary} />
+          <Text style={{ color: colors.primary, fontFamily: font.medium, fontSize: fontSize.sm }} numberOfLines={1}>
+            {selectParam}
+          </Text>
+          <Text style={{ color: colors.primary, fontFamily: font.regular, fontSize: fontSize.xs, opacity: 0.7 }}>
+            · veritabanı modu
+          </Text>
+        </View>
+      )}
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -73,7 +88,13 @@ export default function ChatScreen() {
         keyboardVerticalOffset={insets.top}
       >
         {messages.length === 0 ? (
-          <EmptyState onPick={send} />
+          <EmptyState
+            onPick={send}
+            title={isDb ? selectParam! : undefined}
+            subtitle={isDb ? 'Verilerine doğal dille soru sor' : undefined}
+            suggestions={isDb ? DB_SUGGESTIONS : undefined}
+            icon={isDb ? 'database' : 'sparkles'}
+          />
         ) : (
           <FlatList
             ref={listRef}
@@ -119,4 +140,5 @@ const styles = StyleSheet.create({
   },
   hBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   modelPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1 },
+  ctxBar: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
 });

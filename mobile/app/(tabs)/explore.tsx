@@ -16,7 +16,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 
 const CAPABILITIES = [
   { key: 'chat', Icon: MessageSquare, title: 'Normal Sohbet', desc: 'Yapay zekayla serbest sohbet', ready: true },
-  { key: 'db', Icon: Database, title: 'Veritabanıyla Sohbet', desc: 'Verilerine soru sor, SQL üret', ready: false },
+  { key: 'db', Icon: Database, title: 'Veritabanıyla Sohbet', desc: 'Verilerine soru sor, SQL üret', ready: true },
   { key: 'kb', Icon: BookOpen, title: 'Bilgi Tabanı', desc: 'Belgelerinle konuş', ready: false },
   { key: 'apps', Icon: LayoutGrid, title: 'Uygulamalar', desc: 'Hazır ajanlar ve uygulamalar', ready: false },
 ];
@@ -32,9 +32,13 @@ export default function ExploreScreen() {
     refreshModels();
   }, [refreshModels]);
 
-  const startChat = () => {
-    newChat();
-    router.push('/chat');
+  const handleCap = (key: string) => {
+    if (key === 'chat') {
+      newChat();
+      router.push('/chat');
+    } else if (key === 'db') {
+      router.push('/select-db');
+    }
   };
 
   return (
@@ -55,7 +59,7 @@ export default function ExploreScreen() {
           return (
             <Card
               key={c.key}
-              onPress={c.ready ? startChat : undefined}
+              onPress={c.ready ? () => handleCap(c.key) : undefined}
               elevation={c.ready ? 'soft' : 'none'}
               style={[styles.capRow, !c.ready && { opacity: 0.6 }]}
             >

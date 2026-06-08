@@ -75,6 +75,19 @@ provider = "proxy/openai"
 api_base = "${env:GEMINI_API_BASE:-https://generativelanguage.googleapis.com/v1beta/openai/}"
 api_key = "${env:GEMINI_API_KEY}"
 
+# Ek Gemini modelleri - kotalar model bazinda ayri olabilir, mobil/web'den secilebilir
+[[models.llms]]
+name = "gemini-2.0-flash"
+provider = "proxy/openai"
+api_base = "${env:GEMINI_API_BASE:-https://generativelanguage.googleapis.com/v1beta/openai/}"
+api_key = "${env:GEMINI_API_KEY}"
+
+[[models.llms]]
+name = "gemini-2.5-flash-lite"
+provider = "proxy/openai"
+api_base = "${env:GEMINI_API_BASE:-https://generativelanguage.googleapis.com/v1beta/openai/}"
+api_key = "${env:GEMINI_API_KEY}"
+
 [[models.embeddings]]
 name = "${env:EMBEDDING_MODEL_NAME:-gemini-embedding-001}"
 provider = "proxy/openai"

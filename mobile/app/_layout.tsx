@@ -70,6 +70,7 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
       >
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="chat" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="select-db" options={{ animation: 'slide_from_right' }} />
       </Stack>
     </>
   );

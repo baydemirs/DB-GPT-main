@@ -30,6 +30,9 @@ export type ModelInfo = {
   healthy: boolean;
 };
 
+/** chat_with_db / chat_knowledge gibi modlarda seçilebilir kaynak (ör. veritabanı). */
+export type ChatModeParam = { param: string; type: string };
+
 /** Konuşma listesi. */
 export function getDialogueList(ctx: ApiContext): Promise<Dialogue[]> {
   return apiGet<Dialogue[]>(ctx, '/api/v1/chat/dialogue/list');
@@ -44,11 +47,7 @@ export function getChatHistory(ctx: ApiContext, convUid: string): Promise<ChatMe
 }
 
 /** Yeni konuşma oluştur. */
-export function newDialogue(
-  ctx: ApiContext,
-  chatMode: string,
-  model: string,
-): Promise<Dialogue> {
+export function newDialogue(ctx: ApiContext, chatMode: string, model: string): Promise<Dialogue> {
   return apiPost<Dialogue>(
     ctx,
     `/api/v1/chat/dialogue/new?chat_mode=${encodeURIComponent(chatMode)}&model_name=${encodeURIComponent(model)}`,
@@ -60,12 +59,17 @@ export function deleteDialogue(ctx: ApiContext, convUid: string): Promise<unknow
   return apiPost(ctx, `/api/v1/chat/dialogue/delete?con_uid=${encodeURIComponent(convUid)}`);
 }
 
+/** Bir sohbet modunun seçilebilir kaynakları (ör. veritabanları). */
+export function getChatModeParams(ctx: ApiContext, chatMode: string): Promise<ChatModeParam[]> {
+  return apiPost<ChatModeParam[]>(
+    ctx,
+    `/api/v1/chat/mode/params/list?chat_mode=${encodeURIComponent(chatMode)}`,
+  );
+}
+
 /** Sağlıklı LLM modellerinin listesi. */
 export async function getModels(ctx: ApiContext): Promise<string[]> {
   const list = await apiGet<ModelInfo[]>(ctx, '/api/v2/serve/model/models');
-  const names = (list ?? [])
-    .filter(m => m.worker_type === 'llm')
-    .map(m => m.model_name);
-  // Tekilleştir, sırayı koru
+  const names = (list ?? []).filter(m => m.worker_type === 'llm').map(m => m.model_name);
   return Array.from(new Set(names));
 }
