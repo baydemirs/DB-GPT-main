@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronDown, ChevronLeft, Database, MessageSquarePlus } from 'lucide-react-native';
+import { ChevronLeft, Database, MessageSquarePlus } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -22,7 +22,7 @@ const DB_SUGGESTIONS = ['Kaç satır veri var?', 'İlk 5 kaydı göster', 'Sütu
 
 export default function ChatScreen() {
   const theme = useTheme();
-  const { colors, font, fontSize, spacing, radius } = theme;
+  const { colors, font, fontSize, spacing } = theme;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ prompt?: string }>();
@@ -54,15 +54,9 @@ export default function ChatScreen() {
           <ChevronLeft size={26} color={colors.text} />
         </HeaderButton>
 
-        <Pressable
-          onPress={() => setPickerOpen(true)}
-          style={({ pressed }) => [styles.modelPill, { backgroundColor: pressed ? colors.surfaceAlt : colors.surface, borderColor: colors.border, borderRadius: radius.full }]}
-        >
-          <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: fontSize.sm, maxWidth: 150 }} numberOfLines={1}>
-            {model}
-          </Text>
-          <ChevronDown size={15} color={colors.textMuted} />
-        </Pressable>
+        <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: fontSize.lg }}>
+          {isDb ? 'Veri Sohbeti' : 'Sohbet'}
+        </Text>
 
         <HeaderButton onPress={() => newChat()}>
           <MessageSquarePlus size={22} color={colors.text} />
@@ -110,7 +104,15 @@ export default function ChatScreen() {
         )}
 
         <View style={{ paddingHorizontal: spacing.md, paddingBottom: insets.bottom + 8, paddingTop: 6 }}>
-          <ChatComposer streaming={streaming} onSend={send} onStop={stop} />
+          <ChatComposer
+            streaming={streaming}
+            onSend={send}
+            onStop={stop}
+            model={model}
+            onModelPress={() => setPickerOpen(true)}
+            onDatabase={() => router.push('/select-db')}
+            onSkills={() => router.push('/skills')}
+          />
         </View>
       </KeyboardAvoidingView>
 
@@ -139,6 +141,5 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   hBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  modelPill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 14, paddingVertical: 7, borderWidth: 1 },
   ctxBar: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
 });
