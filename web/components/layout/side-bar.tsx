@@ -107,17 +107,23 @@ function SideBar() {
 
   const formatRelativeTime = useCallback((dateStr?: string) => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    if (diffMins < 1) return '刚刚';
-    if (diffMins < 60) return `${diffMins}分钟前`;
-    if (diffHours < 24) return `${diffHours}小时前`;
-    if (diffDays < 7) return `${diffDays}天前`;
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
+    // Backend "YYYY-MM-DD HH:mm:ss" (saat dilimi yok). Boşluğu 'T' yaparak
+    // tutarlı (yerel saat) parse et — aksi halde bazı tarayıcılar yanlış/Invalid
+    // Date üretip "2 yıl önce" gibi saçma sonuçlar verir.
+    const date = new Date(dateStr.replace(' ', 'T'));
+    if (isNaN(date.getTime())) return '';
+    const diffMs = Date.now() - date.getTime();
+    const sec = Math.floor(Math.abs(diffMs) / 1000); // küçük ileri-saat sapmasını da tolere et
+    const min = Math.floor(sec / 60);
+    const hour = Math.floor(min / 60);
+    const day = Math.floor(hour / 24);
+    if (sec < 60) return 'az önce';
+    if (min < 60) return `${min} dk önce`;
+    if (hour < 24) return `${hour} saat önce`;
+    if (day < 7) return `${day} gün önce`;
+    if (day < 30) return `${Math.floor(day / 7)} hafta önce`;
+    if (day < 365) return `${Math.floor(day / 30)} ay önce`;
+    return `${Math.floor(day / 365)} yıl önce`;
   }, []);
 
   const handleToggleMenu = useCallback(() => {
