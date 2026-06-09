@@ -3,7 +3,9 @@ import { Brain, ChevronDown, ChevronRight, FileBarChart, Sparkles } from 'lucide
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { tapLight } from '../utils/haptics';
 import { trStepTitle } from '../utils/tr';
+import FadeIn from './FadeIn';
 import MarkdownMessage from './MarkdownMessage';
 import TypingDots from './TypingDots';
 
@@ -43,7 +45,13 @@ export default function AgentTurn({
         {/* Düşünme adımları */}
         {steps.length > 0 && (
           <View style={[styles.stepsBox, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md }]}>
-            <Pressable onPress={() => setOpen(o => !o)} style={styles.stepsHeader}>
+            <Pressable
+              onPress={() => {
+                tapLight();
+                setOpen(o => !o);
+              }}
+              style={styles.stepsHeader}
+            >
               <Brain size={15} color={colors.textMuted} />
               <Text style={{ flex: 1, color: colors.textMuted, fontFamily: font.medium, fontSize: fontSize.sm }}>
                 Düşünme adımları ({steps.length})
@@ -83,16 +91,21 @@ export default function AgentTurn({
 
         {/* HTML rapor butonu */}
         {html ? (
-          <Pressable
-            onPress={onViewReport}
-            style={({ pressed }) => [
-              styles.reportBtn,
-              { backgroundColor: pressed ? colors.primaryPressed : colors.primary, borderRadius: radius.lg, marginTop: 10 },
-            ]}
-          >
-            <FileBarChart size={18} color={colors.onPrimary} />
-            <Text style={{ color: colors.onPrimary, fontFamily: font.semibold, fontSize: fontSize.md }}>Raporu Görüntüle</Text>
-          </Pressable>
+          <FadeIn offset={6}>
+            <Pressable
+              onPress={() => {
+                tapLight();
+                onViewReport?.();
+              }}
+              style={({ pressed }) => [
+                styles.reportBtn,
+                { backgroundColor: pressed ? colors.primaryPressed : colors.primary, borderRadius: radius.lg, marginTop: 10 },
+              ]}
+            >
+              <FileBarChart size={18} color={colors.onPrimary} />
+              <Text style={{ color: colors.onPrimary, fontFamily: font.semibold, fontSize: fontSize.md }}>Raporu Görüntüle</Text>
+            </Pressable>
+          </FadeIn>
         ) : null}
       </View>
     </View>

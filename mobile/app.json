@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "DB-GPT",
     "slug": "mobile",
     "version": "1.0.0",
     "scheme": "dbgptmobile",
@@ -24,7 +24,19 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#5B62F4",
+          "dark": {
+            "backgroundColor": "#0A0D13"
+          }
+        }
+      ]
     ]
   }
 }

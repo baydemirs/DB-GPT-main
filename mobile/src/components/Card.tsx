@@ -1,6 +1,7 @@
 /** Temalı kart sarmalayıcı (gölge + yuvarlak köşe). Pressable ya da statik. */
 import { Pressable, StyleProp, View, ViewStyle } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { tapLight } from '../utils/haptics';
 
 type Props = {
   children: React.ReactNode;
@@ -8,9 +9,11 @@ type Props = {
   style?: StyleProp<ViewStyle>;
   padded?: boolean;
   elevation?: 'card' | 'soft' | 'none';
+  /** Basışta hafif haptik geri bildirim (varsayılan açık). */
+  haptic?: boolean;
 };
 
-export default function Card({ children, onPress, style, padded = true, elevation = 'soft' }: Props) {
+export default function Card({ children, onPress, style, padded = true, elevation = 'soft', haptic = true }: Props) {
   const theme = useTheme();
   const { colors, radius, spacing, shadows } = theme;
 
@@ -26,8 +29,11 @@ export default function Card({ children, onPress, style, padded = true, elevatio
   if (onPress) {
     return (
       <Pressable
-        onPress={onPress}
-        style={({ pressed }) => [base, { opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.99 : 1 }] }, style]}
+        onPress={() => {
+          if (haptic) tapLight();
+          onPress();
+        }}
+        style={({ pressed }) => [base, { opacity: pressed ? 0.92 : 1, transform: [{ scale: pressed ? 0.985 : 1 }] }, style]}
       >
         {children}
       </Pressable>

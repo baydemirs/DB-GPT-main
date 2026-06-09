@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { AgentExtInfo, streamAgent } from '../src/api/agent';
 import { pickAndUpload } from '../src/api/files';
+import { error as hapticError, success as hapticSuccess } from '../src/utils/haptics';
 import AgentTurn, { AgentStep } from '../src/components/AgentTurn';
 import ChatBubble from '../src/components/ChatBubble';
 import ChatComposer from '../src/components/ChatComposer';
@@ -123,8 +124,12 @@ export default function AgentScreen() {
     try {
       setUploading(true);
       const r = await pickAndUpload({ baseUrl: settings.baseUrl, userId: settings.userId });
-      if (r) setAttached(r);
+      if (r) {
+        setAttached(r);
+        hapticSuccess();
+      }
     } catch (e: any) {
+      hapticError();
       Alert.alert('Hata', e?.message || 'Dosya yüklenemedi');
     } finally {
       setUploading(false);

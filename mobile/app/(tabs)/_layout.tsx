@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Compass, House, MessagesSquare, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { selection } from '../../src/utils/haptics';
 
 export default function TabsLayout() {
   const theme = useTheme();
@@ -29,6 +30,7 @@ export default function TabsLayout() {
         tabBarIconStyle: { marginTop: 2 },
         sceneStyle: { backgroundColor: colors.bg },
       }}
+      screenListeners={{ tabPress: () => selection() }}
     >
       <Tabs.Screen
         name="index"
