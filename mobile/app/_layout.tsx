@@ -12,8 +12,10 @@ import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import ConnectionBanner from '../src/components/ConnectionBanner';
 import Onboarding from '../src/screens/Onboarding';
 import { ChatProvider } from '../src/store/ChatContext';
+import { ConnectionProvider } from '../src/store/ConnectionContext';
 import { ThemeProvider, useApp } from '../src/theme/ThemeContext';
 
 export default function RootLayout() {
@@ -28,9 +30,11 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <ChatProvider>
-            <Root fontsLoaded={fontsLoaded} />
-          </ChatProvider>
+          <ConnectionProvider>
+            <ChatProvider>
+              <Root fontsLoaded={fontsLoaded} />
+            </ChatProvider>
+          </ConnectionProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
@@ -76,6 +80,7 @@ function Root({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Screen name="skills" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="agent" options={{ animation: 'slide_from_right' }} />
       </Stack>
+      <ConnectionBanner />
     </>
   );
 }

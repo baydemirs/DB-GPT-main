@@ -11,6 +11,8 @@ type Wrapped<T> = {
   data?: T;
 };
 
+const DEFAULT_TIMEOUT_MS = 12000;
+
 function url(ctx: ApiContext, path: string): string {
   return `${ctx.baseUrl.replace(/\/$/, '')}${path}`;
 }
@@ -20,14 +22,26 @@ async function request<T>(
   path: string,
   init: RequestInit & { method: 'GET' | 'POST' },
 ): Promise<T> {
-  const res = await fetch(url(ctx, path), {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      'user-id': ctx.userId,
-      ...(init.headers ?? {}),
-    },
-  });
+  // Sunucu erişilemezse istek sonsuza kadar asılı kalmasın diye zaman aşımı.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(url(ctx, path), {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'user-id': ctx.userId,
+        ...(init.headers ?? {}),
+      },
+    });
+  } catch (e: any) {
+    if (e?.name === 'AbortError') throw new Error('Sunucu yanıt vermedi (zaman aşımı)');
+    throw new Error('Sunucuya bağlanılamadı');
+  } finally {
+    clearTimeout(timer);
+  }
 
   const text = await res.text();
   let json: Wrapped<T> | T;
