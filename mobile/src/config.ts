@@ -13,9 +13,9 @@ export const DEFAULT_CONFIG = {
   apiBaseUrl: 'http://10.24.124.91:5670',
   // Web'deki sahte (mock) kullanıcı ile aynı — backend bunu `user-id` header'ı olarak bekliyor:
   userId: '001',
-  // Demo'da aktif model (configs/dbgpt-demo.toml). 2.5-flash kotası dolarsa
-  // 2.5-flash-lite ayrı kotaya sahip — varsayılan onu kullanıyoruz:
-  model: 'gemini-2.5-flash-lite',
+  // Demo'da aktif model (configs/dbgpt-demo.toml). Varsayılan Groq (ücretsiz/hızlı).
+  // Ajan/beceri token-yoğun → günlük token limiti yüksek + format takibi güçlü model:
+  model: 'openai/gpt-oss-120b',
   // DB/app gerektirmeyen en basit sohbet modu:
   chatMode: 'chat_normal',
   temperature: 0.5,
