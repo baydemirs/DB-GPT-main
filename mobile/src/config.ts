@@ -10,7 +10,7 @@
  */
 export const DEFAULT_CONFIG = {
   // Bu bilgisayarın LAN IP'si (ipconfig -> Wi-Fi IPv4):
-  apiBaseUrl: 'http://10.69.31.91:5670',
+  apiBaseUrl: 'http://10.24.124.91:5670',
   // Web'deki sahte (mock) kullanıcı ile aynı — backend bunu `user-id` header'ı olarak bekliyor:
   userId: '001',
   // Demo'da aktif model (configs/dbgpt-demo.toml). 2.5-flash kotası dolarsa

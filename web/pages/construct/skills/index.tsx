@@ -4,6 +4,7 @@ import axios from '@/utils/ctx-axios';
 import {
   CloseOutlined,
   CloudUploadOutlined,
+  DeleteOutlined,
   DownOutlined,
   EllipsisOutlined,
   GithubOutlined,
@@ -188,6 +189,38 @@ function Skills() {
   const handleToggle = useCallback((skillId: string, checked: boolean) => {
     setEnabledMap(prev => ({ ...prev, [skillId]: checked }));
   }, []);
+
+  const handleDelete = useCallback(
+    (skill: SkillItem, e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      const skillId = skill.id || skill.name;
+      Modal.confirm({
+        title: t('skills_delete_confirm_title') || 'Beceriyi sil',
+        content:
+          (t('skills_delete_confirm_desc') as string) ||
+          `"${skill.name}" becerisi kalıcı olarak silinecek. Emin misiniz?`,
+        okText: t('delete') || 'Sil',
+        okButtonProps: { danger: true },
+        cancelText: t('cancel') || 'İptal',
+        async onOk() {
+          try {
+            const res: any = await axios.post(
+              `${process.env.API_BASE_URL ?? ''}/api/v1/skills/delete?skill_id=${encodeURIComponent(skillId)}`,
+            );
+            if (res?.success) {
+              message.success(t('skills_delete_success') || 'Beceri silindi');
+              fetchSkillsList();
+            } else {
+              message.error(res?.err_msg || t('skills_delete_failed') || 'Silinemedi');
+            }
+          } catch (err: any) {
+            message.error(err?.message || t('skills_delete_failed') || 'Silinemedi');
+          }
+        },
+      });
+    },
+    [t, fetchSkillsList],
+  );
 
   const handleTreeSelect = useCallback(
     (selectedKeys: React.Key[]) => {
@@ -428,7 +461,16 @@ function Skills() {
                       className='opacity-0 group-hover:opacity-100 transition-opacity'
                       onClick={e => e.stopPropagation()}
                     >
-                      <EllipsisOutlined className='p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer' />
+                      {skill.type === 'personal' ? (
+                        <Tooltip title={t('delete') || 'Sil'}>
+                          <DeleteOutlined
+                            className='p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded cursor-pointer'
+                            onClick={e => handleDelete(skill, e)}
+                          />
+                        </Tooltip>
+                      ) : (
+                        <EllipsisOutlined className='p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-pointer' />
+                      )}
                     </div>
                   </div>
                 </div>
