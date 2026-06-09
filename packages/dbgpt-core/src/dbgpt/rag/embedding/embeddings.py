@@ -642,10 +642,14 @@ def _handle_request_result(res: requests.Response) -> List[List[float]]:
     if "data" not in resp:
         raise RuntimeError(resp["detail"])
     embeddings = resp["data"]
-    # Sort resulting embeddings by index
-    sorted_embeddings = sorted(embeddings, key=lambda e: e["index"])  # type: ignore
+    # Sort resulting embeddings by "index" when present (OpenAI). Some
+    # OpenAI-compatible providers (e.g. Gemini) omit "index"; in that case the
+    # response order is already correct, so fall back to the original position.
+    sorted_embeddings = sorted(
+        enumerate(embeddings), key=lambda x: x[1].get("index", x[0])
+    )
     # Return just the embeddings
-    return [result["embedding"] for result in sorted_embeddings]
+    return [item["embedding"] for _, item in sorted_embeddings]
 
 
 @dataclass

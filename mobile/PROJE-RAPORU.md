@@ -1,166 +1,163 @@
-# DB-GPT Mobil — Proje Raporu
+# DB-GPT Mobil — Genel Proje Raporu
 
-> Son güncelleme: 2026-06-09 · Branch: `feature/mobile-app` · Son commit: `77c06e1`
+> Güncelleme: 2026-06-09 · Branch: `feature/mobile-app` · Son commit: `5051dd3`
+> Depo: github.com/baydemirs/DB-GPT-main
+
+---
 
 ## 1. Özet
 
-DB-GPT'nin web sürümünün yanına, **iOS + Android** için tek kod tabanlı bir
-**mobil uygulama** geliştiriliyor. Uygulama backend'e **hiç dokunmadan**, web ile
-**aynı API'leri** (`/api/v1/...`) kullanarak çalışıyor. Geliştirme React Native
-(Expo SDK 54) ile yapılıyor; ekip React/TypeScript bildiği için doğal seçim.
+DB-GPT yapay zeka platformunun **iOS + Android** mobil uygulaması. Tek kod
+tabanından her iki platform; **Expo (React Native)** ile geliştirildi. Uygulama
+backend'e **hiç dokunmadan**, web ile **aynı API'leri** kullanarak çalışır
+(istisna: knowledge ve composer-dosya akışını çalıştırmak için 2 backend bug'ı
+düzeltildi — aşağıda).
 
-**Mevcut durum:** Faz 0 → 3b tamamlandı, gerçek Android telefonda doğrulandı.
-Onboarding'den veritabanı sorgulamaya ve ajan sohbetine kadar çalışan, şık
-tasarımlı bir uygulama hazır.
+**Durum:** Sohbetten veritabanı sorgulamaya, ajanlara, belgelerle sohbete ve
+dosya yüklemeye kadar **uçtan uca çalışan, şık tasarımlı** bir uygulama. Gerçek
+Android telefonda doğrulandı.
+
+---
 
 ## 2. Mimari
 
 ```
-┌─────────────┐     HTTP / SSE      ┌──────────────────────┐
-│  Mobil App  │ ──────────────────► │  DB-GPT Backend      │
-│ (Expo/RN)   │ ◄────────────────── │  (FastAPI, :5670)    │
-└─────────────┘   /api/v1/...        └──────────────────────┘
-       │                                      │
-   aynı API'ler                         aynı veri kaynakları
-       │                                      │
-┌─────────────┐                        ┌──────────────────────┐
-│  Web (Next) │ ──────────────────────►│  Walmart_Sales,      │
-└─────────────┘                        │  Supabase, modeller  │
-                                        └──────────────────────┘
+┌──────────────┐   HTTP / SSE (stream)   ┌────────────────────────┐
+│  Mobil App   │ ──────────────────────► │  DB-GPT Backend        │
+│ (Expo / RN)  │ ◄────────────────────── │  (FastAPI, :5670)       │
+└──────────────┘     /api/v1/...           └────────────────────────┘
+       │  aynı API'ler / aynı backend            │
+┌──────────────┐                          ┌────────────────────────┐
+│  Web (Next)  │ ───────────────────────► │ Veri kaynaklari, bilgi  │
+└──────────────┘                          │ tabanlari, modeller     │
+                                           └────────────────────────┘
 ```
 
-- Backend tek ve ortak: web ve mobil aynı sunucuya bağlanır, aynı sohbet
-  geçmişini / veri kaynaklarını / modelleri görür.
+- Tek ortak backend → web ve mobil aynı sohbet geçmişini, veri kaynaklarını,
+  modelleri, bilgi tabanlarını görür.
 - Auth: web ile aynı (gerçek login yok, `user-id: 001` header).
-- Streaming: chat akışı SSE; React Native'de `expo/fetch` ile çözüldü.
+- Streaming: SSE; React Native'de `expo/fetch` ile çözüldü.
+- Bağlantı: telefon ile PC aynı ağda (hotspot dahil); `http://<LAN-IP>:5670`.
+
+---
 
 ## 3. Teknoloji yığını
 
 | Katman | Teknoloji |
 |--------|-----------|
-| Çatı | Expo SDK 54, React Native 0.81, React 19 |
-| Yönlendirme | Expo Router (dosya tabanlı, web'deki `pages/` gibi) |
-| Dil | TypeScript |
-| Stil | Özel tasarım sistemi (token'lar, Inter font, açık/koyu tema) |
+| Çatı | Expo SDK 54, React Native 0.81, React 19, TypeScript |
+| Yönlendirme | Expo Router (dosya tabanlı) |
+| Tasarım | Özel tasarım sistemi (token, Inter font, açık/koyu tema) |
 | İkonlar | lucide-react-native |
 | Depolama | AsyncStorage (ayarlar) |
 | Streaming | expo/fetch (POST + SSE) |
 | Markdown | react-native-markdown-display |
+| Dosya | expo-document-picker (multipart yükleme) |
 
-## 4. Tamamlanan fazlar
+---
 
-### Faz 0 — Streaming chat kanıtı
-En riskli parça (RN'de POST + SSE streaming) çözüldü. Telefondan backend'e
-bağlanıp Gemini'den canlı cevap akışı doğrulandı.
+## 4. Özellikler (hepsi çalışıyor)
 
-### Faz 1 — Çok ekranlı sohbet + tasarım sistemi
-- Açık / koyu / sistem tema, Inter font, renk token'ları
-- Markdown render (kod, tablo, liste), mesaj baloncukları, animasyonlar
-- Sohbet geçmişi, model seçimi, ayarlar
+### 💬 Sohbet
+- Markdown render (kod, tablo, liste), canlı streaming, durdurma
+- Sohbet geçmişi (ara / aç / sil / yeni), model seçimi
+- Web tarzı composer: metin + araç çubuğu (dosya, beceri, veritabanı, bilgi,
+  model seçici, ses, gönder)
 
-### Faz 2 — Gerçek uygulama yapısı
-- **Onboarding**: 3 tanıtım slaytı + isim girişi → kişisel karşılama
-- **Alt sekme navigasyonu**: Ana Sayfa · Sohbetler · Keşfet · Profil
-- Kart tabanlı UI, yumuşak gölge, "yüzen kart" tasarım dili
-- Ana Sayfa dashboard (hero kart, hızlı öneriler, son sohbetler)
-
-### Faz 3a — Veritabanıyla Sohbet (chat-with-db)
-- Veritabanı seçim ekranı (backend kaynaklarını listeler)
-- Doğal dil → **SQL üretimi** → **veri tablosu** render
+### 🗄️ Veritabanıyla Sohbet
+- Veritabanı seç → doğal dil → **SQL üretimi** → **veri tablosu** render
 - Sohbette veritabanı bağlam çubuğu + DB'ye özel öneriler
-- Walmart_Sales üzerinde doğrulandı (6435 satır)
 
-### Faz 3b — Ajan & Beceriler (react-agent)
-- ReAct ajanı: adım adım düşünüp iş yapar (`/api/v1/chat/react-agent`)
-- **"Düşünme adımları"** katlanabilir kutu + nihai cevap; cevap gelince
-  otomatik kapanır
-- **Beceri kataloğu**: backend'deki skill'leri kart olarak listeler
-- Web tarzı **composer**: metin + araç çubuğu (dosya, beceri, veritabanı,
-  bilgi, model seçici, ses, gönder)
-- Türkçeleştirme: adım başlıkları ve beceri açıklamaları
+### 🤖 Ajan & Beceriler
+- ReAct ajanı: adım adım düşünür (react-agent), "Düşünme adımları" katlanır
+- Beceri kataloğu; **beceri ekleme** (GitHub'dan içe aktar + dosya yükle) ve
+  **silme** (kişisel beceriler)
 
-## 5. Mevcut özellikler (çalışan)
+### 📚 Bilgi Tabanı (RAG)
+- Bilgi alanı listesi/oluşturma (Chroma), alan detayında belge yönetimi
+- **Belge yükleme** (PDF/TXT/DOCX + metin) → otomatik embed → durum rozeti
+- Belgelere dayalı **Türkçe** cevap + referanslar
 
-- ✅ Onboarding + isim ile kişiselleştirme
-- ✅ 4 sekmeli navigasyon, açık/koyu tema
-- ✅ Normal sohbet (markdown, streaming, durdurma)
-- ✅ Sohbet geçmişi (aç/sil/yeni/arama)
-- ✅ Model seçimi (composer'dan)
-- ✅ Veritabanıyla sohbet → SQL + veri tablosu
-- ✅ Ajan & beceriler → düşünme adımları + cevap
-- ✅ Sunucu adresi ayarı + bağlantı testi
+### 📎 Dosya Analizi
+- Composer `+` → dosya seç → yükle → **ajana analiz ettir** (CSV vb.)
+
+### 🎨 Uygulama yapısı & UX
+- Onboarding (tanıtım + isim) → kişisel karşılama
+- 4 sekme: Ana Sayfa · Sohbetler · Keşfet · Profil
+- Açık / koyu / sistem tema, kart tabanlı tasarım, animasyonlar, haptik
+- **Bağlantı-hatası UX**: istek zaman aşımı + sunucu erişilemeyince global uyarı
+  banner'ı (+ yeniden dene + Profil'e git)
+
+---
+
+## 5. Bonus: backend & web düzeltmeleri
+
+Mobili çalıştırırken bulunan ve düzeltilen gerçek bug'lar (web'i de etkiliyordu):
+
+- **Embedding 'index' bug'ı** (`dbgpt/rag/embedding/embeddings.py`): Gemini gibi
+  'index' döndürmeyen sağlayıcılarda KeyError → **tüm** bilgi tabanı sorguları
+  çöküyordu. Düzeltildi.
+- **chat_knowledge Çince prompt** (`scene/chat_knowledge/v1/prompt.py`): dil "en"
+  değilse Çince şablona düşüyordu (tr dahil) → artık kullanıcının diliyle cevap.
+- **Web sohbet geçmişi tarihleri** (`web/.../side-bar.tsx`): kırılgan tarih
+  parse'ı "2 yıl önce" gibi saçma sonuçlar veriyordu → sağlam + Türkçe.
+
+---
 
 ## 6. Dosya yapısı (`mobile/`)
 
 ```
-app/                       # Expo Router ekranları
-  _layout.tsx              # kök: sağlayıcılar, onboarding kapısı, Stack
-  (tabs)/                  # alt sekmeler
-    index.tsx              #   Ana Sayfa
-    chats.tsx              #   Sohbetler
-    explore.tsx            #   Keşfet
-    profile.tsx            #   Profil
-  chat.tsx                 # sohbet ekranı (normal + DB)
-  select-db.tsx            # veritabanı seçimi
-  skills.tsx               # beceri kataloğu
-  agent.tsx                # ajan sohbeti
+app/                          # Expo Router ekranları
+  _layout.tsx                 # kök: sağlayıcılar, onboarding kapısı, bağlantı banner'ı
+  (tabs)/                     # alt sekmeler: index/chats/explore/profile
+  chat.tsx                    # sohbet (normal / DB / bilgi) + dosya ekle
+  select-db.tsx               # veritabanı seçimi
+  select-knowledge.tsx        # bilgi tabanı yönetim merkezi (+ alan oluştur)
+  knowledge-space.tsx         # alan detayı: belgeler + yükleme
+  skills.tsx                  # ajan & beceri kataloğu (ekle/sil)
+  agent.tsx                   # ReAct ajan sohbeti + dosya analizi
 src/
-  theme/                   # tokens, ThemeContext (açık/koyu)
-  store/                   # settings (AsyncStorage), ChatContext
-  api/                     # client, chat, dialogues, agent, skills
-  components/              # Card, ChatBubble, ChatComposer, AssistantMessage,
-                           # DataTable, AgentTurn, ModelPickerSheet, ...
-  utils/                   # dialogue, richContent, tr (Türkçeleştirme)
+  theme/                      # tokens, ThemeContext (açık/koyu)
+  store/                      # settings, ChatContext, ConnectionContext
+  api/                        # client (timeout), chat, agent, dialogues,
+                              # skills, knowledge, files
+  components/                 # Card, ChatBubble, ChatComposer, AssistantMessage,
+                              # DataTable, AgentTurn, ModelPickerSheet,
+                              # ConnectionBanner, EmptyState, ...
+  utils/                      # dialogue, richContent (chart-view), tr (çeviri)
   screens/Onboarding.tsx
 ```
 
+---
+
 ## 7. Bilinen sınırlar
 
-- **Dosya yükleme yok**: CSV/Excel/PDF yükleyip becerilerle (csv-data-analysis
-  vb.) **tam analiz/rapor üretme** henüz yok. Ajanın bu beceriler için dosya
-  istemesi normal.
-- **HTML rapor (artifact) render yok**: web'in interaktif ECharts raporları
-  mobilde gösterilmiyor (WebView gerektirir).
-- **Bilgi tabanı (knowledge) yok**: "Yakında" olarak işaretli.
-- **Grafik render yok**: DB sonuçları tablo olarak gösteriliyor (çizgi/sütun
-  grafik değil).
-- **Model muhakemesi İngilizce**: ajanın iç düşüncesi modelden İngilizce gelir
-  (varsayılan gizli); nihai cevap Türkçe.
+- **Veri görselleştirme yok**: DB/analiz sonuçları tablo olarak (grafik değil).
+- **HTML interaktif rapor (artifact) render yok**: ajanın ürettiği web raporları
+  mobilde gösterilmiyor (WebView gerekir).
+- **KnowledgeGraph alanları çalışmaz**: TuGraph gerektirir; Chroma alanları kullanılmalı.
 - **Gemini kotası**: `gemini-2.5-flash` kotası dolunca `gemini-2.5-flash-lite`
-  kullanılıyor (ayrı kota). Model bazında ayrı kotalar var.
+  kullanılır (model bazında ayrı kota).
+- **Web yerel build alınamıyor**: Node 25 + sınırlı RAM ortam sorunu; web
+  değişiklikleri uygun bir CI/ortamda derlenir. (Tarih düzeltmesi sunulan
+  statik dosya yamalanarak gösterildi.)
 
-## 8. Sonraki adımlar (yapılacaklar)
+---
 
-### Faz 4a — Dosya yükleme + tam beceri çalıştırma (yüksek değer)
-- CSV/Excel/PDF yükleme (expo-document-picker → `/api/v1/python/file/upload`)
-- Becerileri dosyayla tam çalıştırma (Python betiği → analiz)
-- Üretilen **raporu WebView ile gösterme** veya tarayıcıda açma
+## 8. Yol haritası (sonraki adımlar)
 
-### Faz 4b — Bilgi Tabanı (knowledge)
-- Bilgi alanlarını listele, belgelerle sohbet (chat_knowledge)
-- Keşfet'teki "Bilgi Tabanı" kartını aktif et
+- 📊 **Veri görselleştirme** — sonuçları gerçek grafiklerle (çizgi/sütun/pasta)
+- 🌐 **Artifact/HTML rapor** — ajan raporlarını WebView ile gösterme
+- 💅 **Tasarım cilası** — sohbet kartlarına tarih/önizleme, küçük rötuşlar
+- 🚀 **EAS Build** — `.apk`/`.ipa` üretimi, mağaza yüklemesi (iOS için Mac gerekmez)
 
-### Faz 4c — Veri görselleştirme
-- DB/analiz sonuçlarını **grafik** olarak render (çizgi/sütun/pasta)
-- `<chart-view>` tiplerini gerçek grafiklere bağla
-
-### Faz 5 — Cila & dağıtım
-- Sohbet kartlarına tarih/önizleme, geri bildirim (👍/👎)
-- Sesli giriş (gerçek)
-- Performans, erişilebilirlik, hata durumları
-- **EAS Build** ile `.apk` / `.ipa` üretimi (iOS için Mac gerekmez, bulutta
-  derlenir), mağaza yüklemesi
-
-### İyileştirmeler (her zaman)
-- Modeli Türkçe düşünmeye yönlendiren sistem promptu (opsiyonel)
-- Gemini için yeni anahtar / alternatif sağlayıcı
-- Tasarım ince ayarları (hoca değerlendirmesi önceliği)
+---
 
 ## 9. Çalıştırma
 
 **Backend (Windows):**
 ```powershell
-# .env.demo yükle + UTF-8 + venv
+# .env.demo yükle + UTF-8 + venv (uv run çöküyor, venv kullan)
 $env:PYTHONUTF8="1"; $env:PYTHONIOENCODING="utf-8"
 & ".venv\Scripts\dbgpt.exe" start webserver --config configs/dbgpt-demo.toml
 ```
@@ -169,7 +166,20 @@ $env:PYTHONUTF8="1"; $env:PYTHONIOENCODING="utf-8"
 ```powershell
 cd mobile
 npx expo start --lan
-# Telefonda Expo Go → exp://<LAN-IP>:8081
 ```
-Telefon ile PC aynı ağda olmalı (hotspot da olur). Windows Güvenlik Duvarı'nda
-8081 + 5670 portları açık olmalı. Uygulama içi sunucu adresi `http://<LAN-IP>:5670`.
+
+**Telefon (iki ayrı adres):**
+- Expo Go → "Enter URL manually" → `exp://<LAN-IP>:8081`  (Metro)
+- Uygulama → Profil → Sunucu adresi → `http://<LAN-IP>:5670`  (backend)
+
+> LAN-IP: `ipconfig` → Wi-Fi IPv4. Telefon ile PC aynı ağda olmalı; Windows
+> Güvenlik Duvarı'nda 8081 + 5670 açık olmalı.
+
+---
+
+## 10. Commit geçmişi (özet)
+
+`Faz 0` streaming → `Faz 1` çok ekranlı sohbet + tasarım → `Faz 2` onboarding +
+sekmeler → `Faz 3a` veritabanı sohbeti → `Faz 3b` ajan & beceriler → beceri
+yönetimi → web tarih düzeltmesi → bilgi tabanı + 2 backend fix → belge yükleme →
+bağlantı UX → composer dosya yükleme.

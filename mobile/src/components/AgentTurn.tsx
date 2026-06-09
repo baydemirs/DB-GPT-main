@@ -1,9 +1,11 @@
 /** Ajan cevabı: katlanabilir "düşünme adımları" + nihai cevap (markdown). */
-import { Brain, ChevronDown, ChevronRight, Sparkles } from 'lucide-react-native';
+import { Brain, ChevronDown, ChevronRight, FileBarChart, Sparkles } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
+import { tapLight } from '../utils/haptics';
 import { trStepTitle } from '../utils/tr';
+import FadeIn from './FadeIn';
 import MarkdownMessage from './MarkdownMessage';
 import TypingDots from './TypingDots';
 
@@ -13,10 +15,14 @@ export default function AgentTurn({
   steps,
   final,
   running,
+  html,
+  onViewReport,
 }: {
   steps: AgentStep[];
   final: string;
   running: boolean;
+  html?: string;
+  onViewReport?: () => void;
 }) {
   const theme = useTheme();
   const { colors, font, fontSize, radius, spacing } = theme;
@@ -39,7 +45,13 @@ export default function AgentTurn({
         {/* Düşünme adımları */}
         {steps.length > 0 && (
           <View style={[styles.stepsBox, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md }]}>
-            <Pressable onPress={() => setOpen(o => !o)} style={styles.stepsHeader}>
+            <Pressable
+              onPress={() => {
+                tapLight();
+                setOpen(o => !o);
+              }}
+              style={styles.stepsHeader}
+            >
               <Brain size={15} color={colors.textMuted} />
               <Text style={{ flex: 1, color: colors.textMuted, fontFamily: font.medium, fontSize: fontSize.sm }}>
                 Düşünme adımları ({steps.length})
@@ -76,6 +88,25 @@ export default function AgentTurn({
             <TypingDots />
           </View>
         ) : null}
+
+        {/* HTML rapor butonu */}
+        {html ? (
+          <FadeIn offset={6}>
+            <Pressable
+              onPress={() => {
+                tapLight();
+                onViewReport?.();
+              }}
+              style={({ pressed }) => [
+                styles.reportBtn,
+                { backgroundColor: pressed ? colors.primaryPressed : colors.primary, borderRadius: radius.lg, marginTop: 10 },
+              ]}
+            >
+              <FileBarChart size={18} color={colors.onPrimary} />
+              <Text style={{ color: colors.onPrimary, fontFamily: font.semibold, fontSize: fontSize.md }}>Raporu Görüntüle</Text>
+            </Pressable>
+          </FadeIn>
+        ) : null}
       </View>
     </View>
   );
@@ -86,4 +117,6 @@ const styles = StyleSheet.create({
   avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   stepsBox: { borderWidth: 1, overflow: 'hidden' },
   stepsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12 },
+  reportBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, alignSelf: 'flex-start', paddingHorizontal: 18 },
 });
+

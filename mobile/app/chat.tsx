@@ -1,9 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, Database, MessageSquarePlus } from 'lucide-react-native';
+import { BookOpen, ChevronLeft, Database, MessageSquarePlus } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -11,27 +14,51 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { pickAndUpload } from '../src/api/files';
 import ChatBubble from '../src/components/ChatBubble';
 import ChatComposer from '../src/components/ChatComposer';
 import EmptyState from '../src/components/EmptyState';
 import ModelPickerSheet from '../src/components/ModelPickerSheet';
 import { useChat } from '../src/store/ChatContext';
-import { useTheme } from '../src/theme/ThemeContext';
+import { useApp, useTheme } from '../src/theme/ThemeContext';
 
 const DB_SUGGESTIONS = ['Kaç satır veri var?', 'İlk 5 kaydı göster', 'Sütunları listele'];
+const KB_SUGGESTIONS = ['Bu belgelerde ne var?', 'Özetle', 'Ana noktaları listele'];
 
 export default function ChatScreen() {
   const theme = useTheme();
-  const { colors, font, fontSize, spacing } = theme;
+  const { colors, font, fontSize, spacing, radius } = theme;
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ prompt?: string }>();
-  const { messages, streaming, send, stop, newChat, model, models, setModel, selectParam } = useChat();
+  const { messages, streaming, send, stop, newChat, model, models, setModel, selectParam, chatMode } = useChat();
 
+  const { settings } = useApp();
   const listRef = useRef<FlatList>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const sentPrompt = useRef(false);
-  const isDb = !!selectParam;
+  const isKb = chatMode === 'chat_knowledge';
+  const isDb = !!selectParam && !isKb;
+  const hasResource = !!selectParam;
+
+  // Dosya ekle: yükle -> ajana yönlendir (ajan dosyayı analiz eder)
+  const handleAttach = async () => {
+    try {
+      setUploading(true);
+      const r = await pickAndUpload({ baseUrl: settings.baseUrl, userId: settings.userId });
+      if (r) {
+        router.push({
+          pathname: '/agent',
+          params: { filePath: r.path, fileName: r.name, prompt: 'Bu dosyayı analiz et' },
+        });
+      }
+    } catch (e: any) {
+      Alert.alert('Hata', e?.message || 'Dosya yüklenemedi');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (params.prompt && !sentPrompt.current) {
@@ -55,7 +82,7 @@ export default function ChatScreen() {
         </HeaderButton>
 
         <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: fontSize.lg }}>
-          {isDb ? 'Veri Sohbeti' : 'Sohbet'}
+          {isKb ? 'Bilgi Sohbeti' : isDb ? 'Veri Sohbeti' : 'Sohbet'}
         </Text>
 
         <HeaderButton onPress={() => newChat()}>
@@ -63,15 +90,15 @@ export default function ChatScreen() {
         </HeaderButton>
       </View>
 
-      {/* Veritabanı bağlam çubuğu */}
-      {isDb && (
+      {/* Kaynak bağlam çubuğu (veritabanı / bilgi tabanı) */}
+      {hasResource && (
         <View style={[styles.ctxBar, { backgroundColor: colors.primarySoft, borderBottomColor: colors.border }]}>
-          <Database size={14} color={colors.primary} />
+          {isKb ? <BookOpen size={14} color={colors.primary} /> : <Database size={14} color={colors.primary} />}
           <Text style={{ color: colors.primary, fontFamily: font.medium, fontSize: fontSize.sm }} numberOfLines={1}>
             {selectParam}
           </Text>
           <Text style={{ color: colors.primary, fontFamily: font.regular, fontSize: fontSize.xs, opacity: 0.7 }}>
-            · veritabanı modu
+            {isKb ? '· bilgi tabanı modu' : '· veritabanı modu'}
           </Text>
         </View>
       )}
@@ -84,10 +111,10 @@ export default function ChatScreen() {
         {messages.length === 0 ? (
           <EmptyState
             onPick={send}
-            title={isDb ? selectParam! : undefined}
-            subtitle={isDb ? 'Verilerine doğal dille soru sor' : undefined}
-            suggestions={isDb ? DB_SUGGESTIONS : undefined}
-            icon={isDb ? 'database' : 'sparkles'}
+            title={hasResource ? selectParam! : undefined}
+            subtitle={isKb ? 'Belgelerine dayalı soru sor' : isDb ? 'Verilerine doğal dille soru sor' : undefined}
+            suggestions={isKb ? KB_SUGGESTIONS : isDb ? DB_SUGGESTIONS : undefined}
+            icon={isKb ? 'book' : isDb ? 'database' : 'sparkles'}
           />
         ) : (
           <FlatList
@@ -110,13 +137,24 @@ export default function ChatScreen() {
             onStop={stop}
             model={model}
             onModelPress={() => setPickerOpen(true)}
+            onAttach={handleAttach}
             onDatabase={() => router.push('/select-db')}
             onSkills={() => router.push('/skills')}
+            onKnowledge={() => router.push('/select-knowledge')}
           />
         </View>
       </KeyboardAvoidingView>
 
       <ModelPickerSheet visible={pickerOpen} models={models} selected={model} onSelect={setModel} onClose={() => setPickerOpen(false)} />
+
+      <Modal visible={uploading} transparent animationType="fade">
+        <View style={[styles.uploadOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.uploadBox, { backgroundColor: colors.elevated, borderRadius: radius.lg }]}>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={{ color: colors.text, fontFamily: font.medium, fontSize: fontSize.md }}>Dosya yükleniyor…</Text>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -142,4 +180,6 @@ const styles = StyleSheet.create({
   },
   hBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   ctxBar: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth },
+  uploadOverlay: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  uploadBox: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 24, paddingVertical: 18 },
 });

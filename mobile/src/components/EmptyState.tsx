@@ -1,5 +1,5 @@
 /** Boş sohbet karşılama ekranı: logo, selam ve hızlı öneri kartları. */
-import { Database, Sparkles } from 'lucide-react-native';
+import { BookOpen, Database, Sparkles } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 import SuggestionCard from './SuggestionCard';
@@ -16,13 +16,13 @@ type Props = {
   title?: string;
   subtitle?: string;
   suggestions?: string[];
-  icon?: 'sparkles' | 'database';
+  icon?: 'sparkles' | 'database' | 'book';
 };
 
 export default function EmptyState({ onPick, title, subtitle, suggestions, icon = 'sparkles' }: Props) {
   const theme = useTheme();
   const { colors, font, fontSize, spacing } = theme;
-  const Icon = icon === 'database' ? Database : Sparkles;
+  const Icon = icon === 'database' ? Database : icon === 'book' ? BookOpen : Sparkles;
   const list = suggestions ?? DEFAULT_SUGGESTIONS;
 
   return (

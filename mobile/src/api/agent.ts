@@ -32,6 +32,8 @@ export type AgentCallbacks = {
   onStepStart: (step: { id: string; title: string; detail?: string }) => void;
   onStepContent: (id: string, delta: string, kind: 'thought' | 'action' | 'observation') => void;
   onFinal: (content: string) => void;
+  /** Ajan bir HTML rapor (html_interpreter) ürettiğinde tam HTML içeriği. */
+  onHtml?: (html: string, title?: string) => void;
   onDone?: () => void;
   onError?: (message: string) => void;
 };
@@ -119,6 +121,18 @@ function handle(raw: string, cb: AgentCallbacks): boolean {
     case 'step.observation':
       cb.onStepContent(String(evt.id ?? ''), String(evt.content ?? ''), 'observation');
       return false;
+    case 'step.chunk': {
+      // Ajan çıktıları: text/markdown/code/html. HTML rapor (output_type=html)
+      // tam içerikle gelir → WebView'de gösterilmek üzere yakala.
+      const ot = evt.output_type;
+      const content = typeof evt.content === 'string' ? evt.content : '';
+      if (ot === 'html' && content) {
+        cb.onHtml?.(content, typeof evt.title === 'string' ? evt.title : undefined);
+      } else if ((ot === 'text' || ot === 'markdown') && content) {
+        cb.onStepContent(String(evt.id ?? evt.step ?? ''), content, 'observation');
+      }
+      return false;
+    }
     case 'final':
       cb.onFinal(String(evt.content ?? ''));
       return false;

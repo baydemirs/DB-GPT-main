@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Card from '../../src/components/Card';
+import FadeIn from '../../src/components/FadeIn';
 import { useChat } from '../../src/store/ChatContext';
 import { useApp } from '../../src/theme/ThemeContext';
 import { dialogueTitle } from '../../src/utils/dialogue';
@@ -46,17 +47,17 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Selam */}
-      <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
+      <FadeIn delay={0} style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xl }}>
         <Text style={{ color: colors.textMuted, fontFamily: font.regular, fontSize: fontSize.md }}>
           {greeting} 👋
         </Text>
         <Text style={{ color: colors.text, fontFamily: font.bold, fontSize: fontSize.xxl, marginTop: 2 }}>
           Nasıl yardımcı olabilirim?
         </Text>
-      </View>
+      </FadeIn>
 
       {/* Yeni sohbet hero kartı */}
-      <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xxl }}>
+      <FadeIn delay={70} style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.xxl }}>
         <Card onPress={() => startNew()} padded={false} elevation="card" style={{ backgroundColor: colors.primary, borderColor: colors.primary, overflow: 'hidden' }}>
           <View style={styles.hero}>
             <View style={[styles.heroIcon, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
@@ -73,19 +74,21 @@ export default function HomeScreen() {
             </View>
           </View>
         </Card>
-      </View>
+      </FadeIn>
 
       {/* Hızlı başla */}
       <SectionTitle title="Hızlı başla" colors={colors} font={font} fontSize={fontSize} spacing={spacing} />
       <View style={{ paddingHorizontal: spacing.xl, gap: 10, marginBottom: spacing.xxl }}>
-        {QUICK_PROMPTS.map(q => (
-          <Card key={q.text} onPress={() => startNew(q.text)} style={styles.quickRow}>
-            <Text style={{ fontSize: 20 }}>{q.emoji}</Text>
-            <Text style={{ flex: 1, color: colors.text, fontFamily: font.medium, fontSize: fontSize.md }} numberOfLines={1}>
-              {q.text}
-            </Text>
-            <ArrowRight size={17} color={colors.textFaint} />
-          </Card>
+        {QUICK_PROMPTS.map((q, i) => (
+          <FadeIn key={q.text} delay={130 + i * 55}>
+            <Card onPress={() => startNew(q.text)} style={styles.quickRow}>
+              <Text style={{ fontSize: 20 }}>{q.emoji}</Text>
+              <Text style={{ flex: 1, color: colors.text, fontFamily: font.medium, fontSize: fontSize.md }} numberOfLines={1}>
+                {q.text}
+              </Text>
+              <ArrowRight size={17} color={colors.textFaint} />
+            </Card>
+          </FadeIn>
         ))}
       </View>
 
