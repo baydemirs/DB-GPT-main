@@ -151,6 +151,12 @@ const OpenCodeAgentChatContainer: React.FC = () => {
     [agent, model, chatId, scene, history.length, setHistory, sendMessage, t],
   );
 
+  // Devam eden sorguyu durdur: akışı iptal et + UI'yi "çalışmıyor"a çek.
+  const handleCancel = useCallback(() => {
+    cancel();
+    setStreamingTurn(prev => (prev ? { ...prev, isWorking: false } : null));
+  }, [cancel]);
+
   useAsyncEffect(async () => {
     const initMessage = getInitMessage();
     if (initMessage && initMessage.id === chatId) {
@@ -273,7 +279,7 @@ const OpenCodeAgentChatContainer: React.FC = () => {
         >
           <div className='flex flex-wrap w-full py-2 sm:pt-6 sm:pb-10 items-center max-w-4xl mx-auto'>
             {model && <div className='mr-2 flex'>{renderModelIcon(model)}</div>}
-            <CompletionInput loading={isWorking} onSubmit={handleChat} handleFinish={() => {}} />
+            <CompletionInput loading={isWorking} onSubmit={handleChat} onCancel={handleCancel} handleFinish={() => {}} />
           </div>
         </div>
       </div>
