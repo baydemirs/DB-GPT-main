@@ -1,5 +1,5 @@
 /** Ajan cevabı: katlanabilir "düşünme adımları" + nihai cevap (markdown). */
-import { Brain, ChevronDown, ChevronRight, Sparkles } from 'lucide-react-native';
+import { Brain, ChevronDown, ChevronRight, FileBarChart, Sparkles } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
@@ -13,10 +13,14 @@ export default function AgentTurn({
   steps,
   final,
   running,
+  html,
+  onViewReport,
 }: {
   steps: AgentStep[];
   final: string;
   running: boolean;
+  html?: string;
+  onViewReport?: () => void;
 }) {
   const theme = useTheme();
   const { colors, font, fontSize, radius, spacing } = theme;
@@ -76,6 +80,20 @@ export default function AgentTurn({
             <TypingDots />
           </View>
         ) : null}
+
+        {/* HTML rapor butonu */}
+        {html ? (
+          <Pressable
+            onPress={onViewReport}
+            style={({ pressed }) => [
+              styles.reportBtn,
+              { backgroundColor: pressed ? colors.primaryPressed : colors.primary, borderRadius: radius.lg, marginTop: 10 },
+            ]}
+          >
+            <FileBarChart size={18} color={colors.onPrimary} />
+            <Text style={{ color: colors.onPrimary, fontFamily: font.semibold, fontSize: fontSize.md }}>Raporu Görüntüle</Text>
+          </Pressable>
+        ) : null}
       </View>
     </View>
   );
@@ -86,4 +104,6 @@ const styles = StyleSheet.create({
   avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
   stepsBox: { borderWidth: 1, overflow: 'hidden' },
   stepsHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12 },
+  reportBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, alignSelf: 'flex-start', paddingHorizontal: 18 },
 });
+

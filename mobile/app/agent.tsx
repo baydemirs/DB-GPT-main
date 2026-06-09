@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
 import { AgentExtInfo, streamAgent } from '../src/api/agent';
 import { pickAndUpload } from '../src/api/files';
 import AgentTurn, { AgentStep } from '../src/components/AgentTurn';
@@ -24,7 +25,7 @@ import { useApp } from '../src/theme/ThemeContext';
 
 type Msg =
   | { id: string; role: 'human'; text: string }
-  | { id: string; role: 'agent'; steps: AgentStep[]; final: string; running: boolean };
+  | { id: string; role: 'agent'; steps: AgentStep[]; final: string; running: boolean; html?: string };
 
 const AGENT_SUGGESTIONS = ['Ne yapabilirsin?', 'Veri analizi nasıl yaparsın?', 'Bir SQL örneği ver'];
 
@@ -48,6 +49,7 @@ export default function AgentScreen() {
   const [attached, setAttached] = useState<{ path: string; name: string } | null>(
     params.filePath ? { path: String(params.filePath), name: String(params.fileName ?? 'dosya') } : null,
   );
+  const [viewingHtml, setViewingHtml] = useState<string | null>(null);
   const listRef = useRef<FlatList>(null);
   const ctrlRef = useRef<AbortController | null>(null);
   const idRef = useRef(0);
@@ -95,6 +97,7 @@ export default function AgentScreen() {
             return { ...m, steps };
           }),
         onFinal: content => updateAgent(agentId, m => ({ ...m, final: content })),
+        onHtml: content => updateAgent(agentId, m => ({ ...m, html: content })),
         onError: err => updateAgent(agentId, m => ({ ...m, final: `⚠️ ${err}`, running: false })),
         onDone: () => {
           updateAgent(agentId, m => ({ ...m, running: false }));
@@ -173,7 +176,13 @@ export default function AgentScreen() {
               item.role === 'human' ? (
                 <ChatBubble message={{ id: item.id, role: 'human', content: item.text }} />
               ) : (
-                <AgentTurn steps={item.steps} final={item.final} running={item.running} />
+                <AgentTurn
+                  steps={item.steps}
+                  final={item.final}
+                  running={item.running}
+                  html={item.html}
+                  onViewReport={() => item.html && setViewingHtml(item.html)}
+                />
               )
             }
             keyboardShouldPersistTaps="handled"
@@ -205,6 +214,32 @@ export default function AgentScreen() {
             <ActivityIndicator color={colors.primary} />
             <Text style={{ color: colors.text, fontFamily: font.medium, fontSize: fontSize.md }}>Dosya yükleniyor…</Text>
           </View>
+        </View>
+      </Modal>
+
+      {/* HTML rapor görüntüleyici */}
+      <Modal visible={!!viewingHtml} animationType="slide" onRequestClose={() => setViewingHtml(null)}>
+        <View style={[styles.root, { backgroundColor: colors.bg, paddingTop: insets.top }]}>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Pressable onPress={() => setViewingHtml(null)} hitSlop={8} style={styles.hBtn}>
+              <X size={24} color={colors.text} />
+            </Pressable>
+            <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: fontSize.lg }}>Rapor</Text>
+            <View style={{ width: 40 }} />
+          </View>
+          {viewingHtml ? (
+            <WebView
+              originWhitelist={['*']}
+              source={{ html: viewingHtml }}
+              style={{ flex: 1, backgroundColor: colors.bg }}
+              startInLoadingState
+              renderLoading={() => (
+                <View style={styles.uploadOverlay}>
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              )}
+            />
+          ) : null}
         </View>
       </Modal>
     </View>
