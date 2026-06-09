@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, Database, MessageSquarePlus } from 'lucide-react-native';
+import { BookOpen, ChevronLeft, Database, MessageSquarePlus } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
@@ -19,6 +19,7 @@ import { useChat } from '../src/store/ChatContext';
 import { useTheme } from '../src/theme/ThemeContext';
 
 const DB_SUGGESTIONS = ['Kaç satır veri var?', 'İlk 5 kaydı göster', 'Sütunları listele'];
+const KB_SUGGESTIONS = ['Bu belgelerde ne var?', 'Özetle', 'Ana noktaları listele'];
 
 export default function ChatScreen() {
   const theme = useTheme();
@@ -26,12 +27,14 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const params = useLocalSearchParams<{ prompt?: string }>();
-  const { messages, streaming, send, stop, newChat, model, models, setModel, selectParam } = useChat();
+  const { messages, streaming, send, stop, newChat, model, models, setModel, selectParam, chatMode } = useChat();
 
   const listRef = useRef<FlatList>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const sentPrompt = useRef(false);
-  const isDb = !!selectParam;
+  const isKb = chatMode === 'chat_knowledge';
+  const isDb = !!selectParam && !isKb;
+  const hasResource = !!selectParam;
 
   useEffect(() => {
     if (params.prompt && !sentPrompt.current) {
@@ -55,7 +58,7 @@ export default function ChatScreen() {
         </HeaderButton>
 
         <Text style={{ color: colors.text, fontFamily: font.semibold, fontSize: fontSize.lg }}>
-          {isDb ? 'Veri Sohbeti' : 'Sohbet'}
+          {isKb ? 'Bilgi Sohbeti' : isDb ? 'Veri Sohbeti' : 'Sohbet'}
         </Text>
 
         <HeaderButton onPress={() => newChat()}>
@@ -63,15 +66,15 @@ export default function ChatScreen() {
         </HeaderButton>
       </View>
 
-      {/* Veritabanı bağlam çubuğu */}
-      {isDb && (
+      {/* Kaynak bağlam çubuğu (veritabanı / bilgi tabanı) */}
+      {hasResource && (
         <View style={[styles.ctxBar, { backgroundColor: colors.primarySoft, borderBottomColor: colors.border }]}>
-          <Database size={14} color={colors.primary} />
+          {isKb ? <BookOpen size={14} color={colors.primary} /> : <Database size={14} color={colors.primary} />}
           <Text style={{ color: colors.primary, fontFamily: font.medium, fontSize: fontSize.sm }} numberOfLines={1}>
             {selectParam}
           </Text>
           <Text style={{ color: colors.primary, fontFamily: font.regular, fontSize: fontSize.xs, opacity: 0.7 }}>
-            · veritabanı modu
+            {isKb ? '· bilgi tabanı modu' : '· veritabanı modu'}
           </Text>
         </View>
       )}
@@ -84,10 +87,10 @@ export default function ChatScreen() {
         {messages.length === 0 ? (
           <EmptyState
             onPick={send}
-            title={isDb ? selectParam! : undefined}
-            subtitle={isDb ? 'Verilerine doğal dille soru sor' : undefined}
-            suggestions={isDb ? DB_SUGGESTIONS : undefined}
-            icon={isDb ? 'database' : 'sparkles'}
+            title={hasResource ? selectParam! : undefined}
+            subtitle={isKb ? 'Belgelerine dayalı soru sor' : isDb ? 'Verilerine doğal dille soru sor' : undefined}
+            suggestions={isKb ? KB_SUGGESTIONS : isDb ? DB_SUGGESTIONS : undefined}
+            icon={isKb ? 'book' : isDb ? 'database' : 'sparkles'}
           />
         ) : (
           <FlatList
@@ -112,6 +115,7 @@ export default function ChatScreen() {
             onModelPress={() => setPickerOpen(true)}
             onDatabase={() => router.push('/select-db')}
             onSkills={() => router.push('/skills')}
+            onKnowledge={() => router.push('/select-knowledge')}
           />
         </View>
       </KeyboardAvoidingView>

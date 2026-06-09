@@ -17,7 +17,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 const CAPABILITIES = [
   { key: 'chat', Icon: MessageSquare, title: 'Normal Sohbet', desc: 'Yapay zekayla serbest sohbet', ready: true },
   { key: 'db', Icon: Database, title: 'Veritabanıyla Sohbet', desc: 'Verilerine soru sor, SQL üret', ready: true },
-  { key: 'kb', Icon: BookOpen, title: 'Bilgi Tabanı', desc: 'Belgelerinle konuş', ready: false },
+  { key: 'kb', Icon: BookOpen, title: 'Bilgi Tabanı', desc: 'Belgelerinle konuş', ready: true },
   { key: 'apps', Icon: LayoutGrid, title: 'Ajan & Beceriler', desc: 'Düşünüp adım adım iş yapan ajan', ready: true },
 ];
 
@@ -40,6 +40,8 @@ export default function ExploreScreen() {
       router.push('/select-db');
     } else if (key === 'apps') {
       router.push('/skills');
+    } else if (key === 'kb') {
+      router.push('/select-knowledge');
     }
   };
 
