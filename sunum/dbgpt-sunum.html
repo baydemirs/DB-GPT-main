@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>DB-GPT Sunum</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: 1280px 720px; margin: 0; }
+  :root{
+    --indigo:#5B62F4; --purple:#7C5CFC; --ink:#0E1117; --muted:#5B6472; --faint:#9AA2AD;
+    --line:#E7EAF0; --bg:#F4F5FB; --card:#FFFFFF;
+    --blue:#3B82F6; --green:#10B981; --amber:#F59E0B; --violet:#8B5CF6; --pink:#EC4899; --cyan:#06B6D4;
+    --grad:linear-gradient(135deg,#6366F1 0%, #8B5CF6 55%, #A855F7 100%);
+  }
+  html,body{ font-family:'Segoe UI',Inter,system-ui,sans-serif; color:var(--ink); }
+  .slide{
+    position:relative; width:1280px; height:720px; overflow:hidden;
+    page-break-after:always; background:var(--bg); padding:64px 72px;
+    display:flex; flex-direction:column;
+  }
+  .slide:last-child{ page-break-after:auto; }
+
+  /* kicker + başlık */
+  .kicker{ display:inline-flex; align-items:center; gap:8px; font-size:15px; font-weight:600;
+    color:var(--indigo); background:#ECEDFE; padding:7px 16px; border-radius:999px; letter-spacing:.3px; }
+  h1.title{ font-size:40px; font-weight:800; margin-top:18px; letter-spacing:-.5px; }
+  .subtitle{ font-size:19px; color:var(--muted); margin-top:8px; font-weight:400; }
+
+  /* sayfa numarası / altbilgi */
+  .foot{ position:absolute; bottom:30px; left:72px; right:72px; display:flex; justify-content:space-between;
+    align-items:center; font-size:13px; color:var(--faint); font-weight:500; }
+  .foot .brand{ display:flex; align-items:center; gap:8px; }
+  .dot{ width:9px; height:9px; border-radius:50%; background:var(--grad); }
+
+  /* kartlar */
+  .grid{ display:grid; gap:20px; margin-top:34px; }
+  .g2{ grid-template-columns:1fr 1fr; }
+  .g3{ grid-template-columns:1fr 1fr 1fr; }
+  .card{ background:var(--card); border:1px solid var(--line); border-radius:20px; padding:26px 26px;
+    box-shadow:0 10px 28px rgba(27,35,48,.06); }
+  .chip{ width:54px; height:54px; border-radius:15px; display:flex; align-items:center; justify-content:center;
+    font-size:26px; margin-bottom:16px; }
+  .card h3{ font-size:20px; font-weight:700; margin-bottom:7px; }
+  .card p{ font-size:15px; color:var(--muted); line-height:1.5; }
+
+  /* renk yardımcıları */
+  .c-blue{background:#E8F1FE;color:var(--blue)} .c-green{background:#E3F8F0;color:var(--green)}
+  .c-amber{background:#FEF3DC;color:var(--amber)} .c-violet{background:#F0EAFE;color:var(--violet)}
+  .c-pink{background:#FCE7F3;color:var(--pink)} .c-indigo{background:#ECEDFE;color:var(--indigo)}
+  .c-cyan{background:#DEF6FB;color:var(--cyan)}
+
+  /* KAPAK */
+  .cover{ background:var(--grad); color:#fff; padding:0; justify-content:center; }
+  .cover .blob{ position:absolute; border-radius:50%; filter:blur(2px); opacity:.18; background:#fff; }
+  .cover .b1{ width:520px;height:520px; top:-160px; right:-120px; }
+  .cover .b2{ width:360px;height:360px; bottom:-140px; left:-80px; opacity:.13; }
+  .cover-inner{ padding:0 96px; z-index:2; }
+  .logo-badge{ display:inline-flex; align-items:center; gap:14px; background:rgba(255,255,255,.16);
+    padding:12px 22px; border-radius:18px; backdrop-filter:blur(6px); }
+  .logo-badge .lg{ width:42px;height:42px; border-radius:11px; background:#fff; color:var(--indigo);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:20px; }
+  .logo-badge span{ font-size:18px; font-weight:600; letter-spacing:.5px; }
+  .cover h1{ font-size:76px; font-weight:800; margin-top:30px; letter-spacing:-1.5px; line-height:1; }
+  .cover .tag{ font-size:25px; margin-top:20px; font-weight:400; opacity:.95; max-width:760px; line-height:1.4; }
+  .cover .pills{ margin-top:34px; display:flex; gap:12px; }
+  .cover .pill{ background:rgba(255,255,255,.18); padding:10px 20px; border-radius:999px; font-size:16px; font-weight:600; }
+  .cover .meta{ position:absolute; bottom:54px; left:96px; font-size:16px; opacity:.9; }
+
+  /* mimari diyagram */
+  .arch{ margin-top:18px; display:flex; flex-direction:column; align-items:center; gap:7px; }
+  .arch-row{ display:flex; gap:18px; justify-content:center; width:100%; }
+  .node{ flex:1; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:14px 16px;
+    text-align:center; box-shadow:0 8px 22px rgba(27,35,48,.06); }
+  .node .ic{ font-size:26px; } .node h4{ font-size:17px; font-weight:700; margin:5px 0 3px; }
+  .node p{ font-size:12.5px; color:var(--muted); line-height:1.35; }
+  .node.big{ background:var(--grad); color:#fff; border:none; padding:16px; }
+  .node.big h4{ color:#fff; } .node.big p{ color:rgba(255,255,255,.9); }
+  .arrow{ font-size:20px; color:var(--indigo); font-weight:800; line-height:1; }
+  .arrow-label{ font-size:12.5px; color:var(--faint); }
+
+  /* liste satırları */
+  .rows{ margin-top:30px; display:flex; flex-direction:column; gap:14px; }
+  .rowi{ display:flex; align-items:center; gap:18px; background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:18px 22px; box-shadow:0 6px 18px rgba(27,35,48,.05); }
+  .rowi .ic{ width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .rowi b{ font-size:18px; } .rowi span{ font-size:15px; color:var(--muted); }
+  .rowi .txt{ display:flex; flex-direction:column; gap:2px; }
+
+  /* tasarım slaytı vurgu */
+  .hero-line{ font-size:22px; color:var(--muted); margin-top:26px; line-height:1.55; max-width:1050px;}
+  .hero-line b{ color:var(--ink); }
+
+  /* teknoloji yığını */
+  .stack{ margin-top:30px; display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .stk{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 24px;
+    box-shadow:0 6px 18px rgba(27,35,48,.05);}
+  .stk .lbl{ font-size:14px; font-weight:700; color:var(--indigo); text-transform:uppercase; letter-spacing:.5px; }
+  .stk .val{ font-size:17px; color:var(--ink); margin-top:6px; line-height:1.5; }
+  .stk .val small{ color:var(--muted); font-size:14px; }
+
+  /* fazlar zaman çizelgesi */
+  .timeline{ margin-top:30px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .ph{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; position:relative;
+    box-shadow:0 8px 22px rgba(27,35,48,.05); }
+  .ph .num{ width:38px;height:38px;border-radius:11px;background:var(--grad);color:#fff;display:flex;
+    align-items:center;justify-content:center;font-weight:800;font-size:17px;margin-bottom:13px;}
+  .ph h4{ font-size:17px; font-weight:700; margin-bottom:6px;}
+  .ph p{ font-size:14px; color:var(--muted); line-height:1.45;}
+  .ph .ok{ position:absolute; top:22px; right:22px; color:var(--green); font-size:18px; font-weight:800;}
+
+  /* kapanış */
+  .end{ background:var(--grad); color:#fff; justify-content:center; align-items:center; text-align:center; }
+  .end h1{ font-size:60px; font-weight:800; letter-spacing:-1px;}
+  .end p{ font-size:23px; margin-top:18px; opacity:.95;}
+  .end .pills{ margin-top:40px; display:flex; gap:14px;}
+  .end .pill{ background:rgba(255,255,255,.18); padding:12px 24px; border-radius:999px; font-size:17px; font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- 1) KAPAK -->
+<section class="slide cover">
+  <div class="blob b1"></div><div class="blob b2"></div>
+  <div class="cover-inner">
+    <div class="logo-badge"><div class="lg">DB</div><span>DB-GPT</span></div>
+    <h1>DB-GPT</h1>
+    <div class="tag">Yapay Zekâ Destekli Veritabanı Sohbet &amp; Analiz Platformu<br>— Web ve Mobil Uygulama —</div>
+    <div class="pills">
+      <div class="pill">🌐 Web</div>
+      <div class="pill">📱 iOS &amp; Android</div>
+      <div class="pill">🤖 Yapay Zekâ</div>
+    </div>
+  </div>
+  <div class="meta">Dönem Projesi &nbsp;•&nbsp; Haziran 2026</div>
+</section>
+
+<!-- 2) PROJE NEDİR -->
+<section class="slide">
+  <div><span class="kicker">✨ PROJE TANITIMI</span></div>
+  <h1 class="title">Proje Nedir?</h1>
+  <div class="subtitle">Veriyle konuşmayı herkes için kolaylaştıran bir yapay zekâ platformu.</div>
+  <div class="grid g2">
+    <div class="card">
+      <div class="chip c-indigo">💬</div>
+      <h3>Doğal Dille Veri Sorgulama</h3>
+      <p>Kullanıcı Türkçe soru sorar; sistem SQL üretir, veritabanını sorgular ve sonucu anlaşılır biçimde sunar. Teknik bilgi gerekmez.</p>
+    </div>
+    <div class="card">
+      <div class="chip c-violet">🧠</div>
+      <h3>Yapay Zekâ Asistanı</h3>
+      <p>Büyük dil modelleri (LLM) ile sohbet, belge analizi, adım adım görev yürütme ve otomatik rapor üretimi.</p>
+    </div>
+    <div class="card">
+      <div class="chip c-green">🌐</div>
+      <h3>Web Platformu</h3>
+      <p>Masaüstü için zengin arayüz: veri kaynakları, bilgi tabanı, ajan becerileri ve görselleştirme.</p>
+    </div>
+    <div class="card">
+      <div class="chip c-blue">📱</div>
+      <h3>Mobil Uygulama</h3>
+      <p>Web'in gücünü cebe taşıyan, iOS ve Android'de çalışan gerçek native uygulama.</p>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><span class="dot"></span>DB-GPT</div><div>02</div></div>
+</section>
+
+<!-- 3) MİMARİ -->
+<section class="slide">
+  <div><span class="kicker">🏗️ SİSTEM MİMARİSİ</span></div>
+  <h1 class="title">Nasıl Çalışıyor?</h1>
+  <div class="subtitle">Tek bir backend; hem web hem mobil istemciyi besler.</div>
+  <div class="arch">
+    <div class="arch-row">
+      <div class="node"><div class="ic">📱</div><h4>Mobil İstemci</h4><p>Expo · React Native<br>(iOS &amp; Android)</p></div>
+      <div class="node"><div class="ic">🌐</div><h4>Web İstemci</h4><p>Next.js · React</p></div>
+    </div>
+    <div class="arrow">⬇</div>
+    <div class="arrow-label">REST API &nbsp;+&nbsp; SSE (canlı akış)</div>
+    <div class="arch-row">
+      <div class="node big"><div class="ic">⚙️</div><h4>Backend Sunucusu</h4><p>Python · FastAPI &nbsp;|&nbsp; Port 5670</p></div>
+    </div>
+    <div class="arrow">⬇</div>
+    <div class="arch-row">
+      <div class="node"><div class="ic">🤖</div><h4>LLM</h4><p>Groq · Gemini<br>(OpenAI uyumlu)</p></div>
+      <div class="node"><div class="ic">🗄️</div><h4>Veritabanları</h4><p>SQLite · PostgreSQL</p></div>
+      <div class="node"><div class="ic">📚</div><h4>Vektör Deposu</h4><p>Chroma (RAG)</p></div>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><span class="dot"></span>DB-GPT</div><div>03</div></div>
+</section>
+
+<!-- 4) TEMEL ÖZELLİKLER -->
+<section class="slide">
+  <div><span class="kicker">🚀 ÖZELLİKLER</span></div>
+  <h1 class="title">Temel Özellikler</h1>
+  <div class="subtitle">Hem web'de hem mobilde çalışan beş ana yetenek.</div>
+  <div class="grid g3" style="margin-top:26px;">
+    <div class="card">
+      <div class="chip c-blue">💬</div><h3>Akıllı Sohbet</h3>
+      <p>Yapay zekâ ile canlı, akan (streaming) sohbet. Markdown ve kod desteği.</p>
+    </div>
+    <div class="card">
+      <div class="chip c-green">🗄️</div><h3>Veritabanıyla Sohbet</h3>
+      <p>Soru → otomatik SQL → tablo sonucu. Veriyi konuşarak keşfet.</p>
+    </div>
+    <div class="card">
+      <div class="chip c-amber">📚</div><h3>Bilgi Tabanı</h3>
+      <p>Belge/metin yükle, yapay zekâ kaynaklarından cevap üretir (RAG).</p>
+    </div>
+    <div class="card">
+      <div class="chip c-violet">🤖</div><h3>Ajan &amp; Beceriler</h3>
+      <p>Düşünüp adım adım iş yapan ajan; eklenebilir beceriler.</p>
+    </div>
+    <div class="card">
+      <div class="chip c-pink">📊</div><h3>HTML Rapor</h3>
+      <p>Ajanın ürettiği görsel raporlar tam ekran görüntülenir.</p>
+    </div>
+    <div class="card">
+      <div class="chip c-cyan">🌗</div><h3>Açık / Koyu Tema</h3>
+      <p>Sistemle uyumlu tema; her ekranda tutarlı, modern tasarım.</p>
+    </div>
+  </div>
+  <div class="foot"><div class="brand"><span class="dot"></span>DB-GPT</div><div>04</div></div>
+</section>
+
+<!-- 5) MOBİL -->
+<section class="slide">
+  <div><span class="kicker">📱 MOBİL UYGULAMA</span></div>
+  <h1 class="title">Cepte DB-GPT</h1>
+  <div class="subtitle">Tek kod tabanı, iki platform — gerçek bir native uygulama.</div>
+  <div class="rows">
+    <div class="rowi"><div class="ic c-indigo">⚛️</div><div class="txt"><b>Expo · React Native · TypeScript</b><span>Tek kaynak koddan hem iOS hem Android için derlenir.</span></div></div>
+    <div class="rowi"><div class="ic c-blue">🧭</div><div class="txt"><b>Gerçek Uygulama Yapısı</b><span>Tanıtım (onboarding) ekranları, alt sekme navigasyonu, kart tabanlı arayüz.</span></div></div>
+    <div class="rowi"><div class="ic c-green">🔗</div><div class="txt"><b>Web ile Aynı Backend</b><span>Sohbet, veritabanı, bilgi tabanı ve ajan — hepsi mobilde de çalışır.</span></div></div>
+    <div class="rowi"><div class="ic c-pink">📎</div><div class="txt"><b>Dosya &amp; Belge Yükleme</b><span>Telefondan doğrudan belge/veri yükleyip analiz ettirme.</span></div></div>
+  </div>
+  <div class="foot"><div class="brand"><span class="dot"></span>DB-GPT</div><div>05</div></div>
+</section>
+
+<!-- 6) TASARIM -->
+<section class="slide">
+  <div><span class="kicker">🎨 TASARIM &amp; DENEYİM</span></div>
+  <h1 class="title">Göze ve Ele Hoş Gelen Tasarım</h1>
+  <p class="hero-line">Modern &amp; minimal bir tasarım dili; <b>özel tasarım sistemi</b> (renk, tipografi, boşluk, gölge token'ları) üzerine kuruldu.</p>
+  <div class="grid g3" style="margin-top:28px;">
+    <div class="card"><div class="chip c-indigo">🌗</div><h3>Açık / Koyu Tema</h3><p>Sisteme uyumlu, her iki temada da özenle ayarlanmış renkler.</p></div>
+    <div class="card"><div class="chip c-violet">✨</div><h3>Akıcı Animasyonlar</h3><p>Kartlar ve mesajlar yumuşak girişlerle belirir; profesyonel his.</p></div>
+    <div class="card"><div class="chip c-pink">📳</div><h3>Dokunsal Geri Bildirim</h3><p>Her dokunuşta haptik titreşim — gerçek uygulama hissi.</p></div>
+  </div>
+  <div class="foot"><div class="brand"><span class="dot"></span>DB-GPT</div><div>06</div></div>
+</section>
+
+<!-- 7) TEKNOLOJİ -->
+<section class="slide">
+  <div><span class="kicker">🧩 TEKNOLOJİ YIĞINI</span></div>
+  <h1 class="title">Kullanılan Teknolojiler</h1>
+  <div class="stack">
+    <div class="stk"><div class="lbl">Mobil</div><div class="val">Expo (SDK 54) · React Native · Expo Router<br><small>TypeScript · expo/fetch ile canlı SSE akışı</small></div></div>
+    <div class="stk"><div class="lbl">Web</div><div class="val">Next.js · React · Ant Design<br><small>Sunucu tarafı render edilen zengin arayüz</small></div></div>
+    <div class="stk"><div class="lbl">Backend</div><div class="val">Python · FastAPI (Port 5670)<br><small>REST API + canlı akış (Server-Sent Events)</small></div></div>
+    <div class="stk"><div class="lbl">Yapay Zekâ</div><div class="val">Groq (Llama 3.3) · Google Gemini<br><small>OpenAI uyumlu uç noktalar · Chroma vektör (RAG)</small></div></div>
+  </div>
+  <div class="foot"><div class="brand"><span class="dot"></span>DB-GPT</div><div>07</div></div>
+</section>
+
+<!-- 8) SÜREÇ / FAZLAR -->
+<section class="slide">
+  <div><span class="kicker">📈 GELİŞTİRME SÜRECİ</span></div>
+  <h1 class="title">Adım Adım İnşa</h1>
+  <div class="subtitle">Mobil uygulama, planlı fazlarla geliştirildi.</div>
+  <div class="timeline">
+    <div class="ph"><div class="ok">✓</div><div class="num">1</div><h4>Temel &amp; Sohbet</h4><p>Canlı akan sohbet, tasarım sistemi, açık/koyu tema.</p></div>
+    <div class="ph"><div class="ok">✓</div><div class="num">2</div><h4>Uygulama Yapısı</h4><p>Onboarding, alt sekmeler, kart tabanlı modern arayüz.</p></div>
+    <div class="ph"><div class="ok">✓</div><div class="num">3</div><h4>Veritabanı Sohbeti</h4><p>Doğal dil → SQL → tablo sonuçları.</p></div>
+    <div class="ph"><div class="ok">✓</div><div class="num">4</div><h4>Ajan &amp; Beceriler</h4><p>Adım adım iş yapan ajan; beceri yönetimi.</p></div>
+    <div class="ph"><div class="ok">✓</div><div class="num">5</div><h4>Bilgi Tabanı</h4><p>Belge yükleme + RAG ile kaynaktan cevap.</p></div>
+    <div class="ph"><div class="ok">✓</div><div class="num">6</div><h4>HTML Rapor &amp; Cila</h4><p>Görsel raporlar, haptik, animasyonlar.</p></div>
+  </div>
+  <div class="foot"><div class="brand"><span class="dot"></span>DB-GPT</div><div>08</div></div>
+</section>
+
+<!-- 9) KAPANIŞ -->
+<section class="slide end">
+  <div class="logo-badge" style="margin-bottom:6px;"><div class="lg">DB</div><span>DB-GPT</span></div>
+  <h1>Teşekkürler</h1>
+  <p>Web ve mobilde çalışan, uçtan uca yapay zekâ destekli veritabanı platformu.</p>
+  <div class="pills">
+    <div class="pill">🌐 Web</div>
+    <div class="pill">📱 Mobil</div>
+    <div class="pill">🤖 Yapay Zekâ</div>
+    <div class="pill">🎨 Modern Tasarım</div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -187,11 +187,12 @@ async def list_skills(
                 except Exception:
                     pass
 
-            # Determine type based on directory structure
+            # Determine type based on directory structure (Windows yol ayraci guvenli)
+            fp_norm = str(file_path).replace("\\", "/")
             skill_type_category = "official"
-            if "user/" in file_path or "/user/" in file_path:
+            if fp_norm.startswith("user/") or "/user/" in fp_norm:
                 skill_type_category = "personal"
-            elif "claude/" in file_path or "/claude/" in file_path:
+            elif fp_norm.startswith("claude/") or "/claude/" in fp_norm:
                 skill_type_category = "official"
 
             # Get skill_type value
@@ -219,6 +220,66 @@ async def list_skills(
     except Exception as e:
         logger.exception("Failed to load skills from directory")
         return Result.failed(code="E5001", msg=f"Failed to load skills: {str(e)}")
+
+
+@router.post("/v1/skills/delete", response_model=Result)
+async def delete_skill(
+    skill_id: str = Query(..., description="Skill id (name) to delete"),
+    user_token: UserRequest = Depends(get_user_from_headers),
+):
+    """Delete a personal (user) skill by id.
+
+    Only skills installed under ``skills/user/`` can be deleted. Official skills
+    (shipped with the repo) are protected and cannot be removed via the API.
+    """
+    from dbgpt.agent.skill.loader import SkillLoader
+
+    skills_dir = Path(DEFAULT_SKILLS_DIR).expanduser().resolve()
+    user_dir = (skills_dir / "user").resolve()
+
+    try:
+        loader = SkillLoader()
+        skills = loader.load_skills_from_directory(str(skills_dir), recursive=True)
+
+        target_dir: Optional[Path] = None
+        for skill in skills:
+            if not skill or not skill.metadata:
+                continue
+            metadata = skill.metadata
+            if metadata.name != skill_id:
+                continue
+            fp = getattr(metadata, "file_path", None) or ""
+            if not fp and hasattr(skill, "_config"):
+                fp = skill._config.get("file_path", "")
+            if not fp:
+                continue
+            fp_resolved = Path(fp).expanduser().resolve()
+            # SKILL.md'nin bulundugu klasor = becerinin klasoru
+            target_dir = fp_resolved.parent if fp_resolved.suffix == ".md" else fp_resolved
+            break
+
+        if target_dir is None:
+            return Result.failed(code="E4004", msg="Skill not found")
+
+        # Guvenlik: sadece skills/user/ altindaki kisisel beceriler silinebilir
+        try:
+            rel = target_dir.relative_to(user_dir)
+        except ValueError:
+            return Result.failed(
+                code="E4003", msg="Only personal skills can be deleted (official skills are protected)"
+            )
+        if rel == Path("."):
+            return Result.failed(code="E4003", msg="Invalid skill path")
+
+        if not target_dir.exists():
+            return Result.failed(code="E4004", msg="Skill folder not found")
+
+        shutil.rmtree(target_dir)
+        logger.info(f"Deleted personal skill: {skill_id} ({target_dir})")
+        return Result.succ({"id": skill_id, "deleted": True})
+    except Exception as e:
+        logger.exception("Failed to delete skill")
+        return Result.failed(code="E5001", msg=f"Failed to delete skill: {str(e)}")
 
 
 @router.get("/v1/skills/detail", response_model=Result)

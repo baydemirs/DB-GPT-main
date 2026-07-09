@@ -50,8 +50,11 @@ constraints:
             {question},when answering, use the same language as the "user".
 """
 
+# Sadece Cince (zh) icin Cince sablon; diger tum diller (tr, en, ...) icin
+# Ingilizce sablon kullan -- bu sablon "kullanicinin diliyle cevapla" der, boylece
+# Turkce soruya Turkce cevap gelir (eskiden non-en hep Cince'ye dusuyordu).
 _DEFAULT_TEMPLATE = (
-    _DEFAULT_TEMPLATE_EN if CFG.LANGUAGE == "en" else _DEFAULT_TEMPLATE_ZH
+    _DEFAULT_TEMPLATE_ZH if CFG.LANGUAGE == "zh" else _DEFAULT_TEMPLATE_EN
 )
 
 PROMPT_NEED_STREAM_OUT = True

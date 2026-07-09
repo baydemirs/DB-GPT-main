@@ -66,11 +66,50 @@ memory = {type = "token", max_token_limit = 20000}
 # =============================================================
 [models]
 
-# ---- Google Gemini (VARSAYILAN - OpenAI uyumlu endpoint uzerinden) ----
+# ---- Groq (VARSAYILAN LLM - ucretsiz, kart yok, cok hizli, OpenAI uyumlu) ----
+# Ucretsiz anahtar: https://console.groq.com/keys
+[[models.llms]]
+name = "${env:LLM_MODEL_NAME:-llama-3.3-70b-versatile}"
+provider = "proxy/openai"
+api_base = "${env:GROQ_API_BASE:-https://api.groq.com/openai/v1}"
+api_key = "${env:GROQ_API_KEY}"
+
+[[models.llms]]
+name = "llama-3.1-8b-instant"
+provider = "proxy/openai"
+api_base = "${env:GROQ_API_BASE:-https://api.groq.com/openai/v1}"
+api_key = "${env:GROQ_API_KEY}"
+
+[[models.llms]]
+name = "openai/gpt-oss-120b"
+provider = "proxy/openai"
+api_base = "${env:GROQ_API_BASE:-https://api.groq.com/openai/v1}"
+api_key = "${env:GROQ_API_KEY}"
+
+[[models.llms]]
+name = "qwen/qwen3-32b"
+provider = "proxy/openai"
+api_base = "${env:GROQ_API_BASE:-https://api.groq.com/openai/v1}"
+api_key = "${env:GROQ_API_KEY}"
+
+# ---- Google Gemini (alternatif LLM + embedding saglayicisi) ----
 # Tek GEMINI_API_KEY ile hem LLM hem embedding calisir.
 # Ucretsiz anahtar: https://aistudio.google.com/apikey
 [[models.llms]]
-name = "${env:LLM_MODEL_NAME:-gemini-2.5-flash}"
+name = "gemini-2.5-flash"
+provider = "proxy/openai"
+api_base = "${env:GEMINI_API_BASE:-https://generativelanguage.googleapis.com/v1beta/openai/}"
+api_key = "${env:GEMINI_API_KEY}"
+
+# Ek Gemini modelleri - kotalar model bazinda ayri olabilir, mobil/web'den secilebilir
+[[models.llms]]
+name = "gemini-2.0-flash"
+provider = "proxy/openai"
+api_base = "${env:GEMINI_API_BASE:-https://generativelanguage.googleapis.com/v1beta/openai/}"
+api_key = "${env:GEMINI_API_KEY}"
+
+[[models.llms]]
+name = "gemini-2.5-flash-lite"
 provider = "proxy/openai"
 api_base = "${env:GEMINI_API_BASE:-https://generativelanguage.googleapis.com/v1beta/openai/}"
 api_key = "${env:GEMINI_API_KEY}"
